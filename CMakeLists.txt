@@ -11,16 +11,16 @@ include_directories(${CMAKE_SOURCE_DIR} ${ROS_INCLUDE_DIRS})
 file(GLOB ROS_LD_DIRS "${CMAKE_SYSROOT}/opt/ros/*/lib")
 link_directories(${ROS_LD_DIRS})
 
-set(LD_FLAGS "-lpthread -lrosconsole -lroscpp -lroscpp_serialization -lzmq -lprotobuf") #  -lfmt
+set(LD_FLAGS "-lpthread -lrosconsole -lroscpp -lroscpp_serialization -lzmq -lprotobuf -lfmt")
 
 file(GLOB CFILES "tyndal/*/*.c*")
-if (${CFILES})
+if ("${CFILES}" STREQUAL "")
+set(TYNDAL_TARGET "${LD_FLAGS}")
+else()
 add_library(tyndal SHARED ${CFILES})
 target_link_libraries(tyndal ${LD_FLAGS})
 install(TARGETS tyndal DESTINATION lib)
 set(TYNDAL_TARGET "tyndal")
-else()
-set(TYNDAL_TARGET "${LD_FLAGS}")
 endif()
 
 file(GLOB HEADERS "tyndal/*.h*" "tyndal/*/*.h*")
