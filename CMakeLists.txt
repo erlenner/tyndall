@@ -6,11 +6,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall")
 
-file(GLOB ROS_INCLUDE_DIRS "${CMAKE_SYSROOT}/opt/ros/*/include")
-include_directories(${CMAKE_SOURCE_DIR} ${ROS_INCLUDE_DIRS})
-file(GLOB ROS_LD_DIRS "${CMAKE_SYSROOT}/opt/ros/*/lib")
-link_directories(${ROS_LD_DIRS})
+find_package(roscpp)
 
+if ("${roscpp_LINK_DIRECTORIES}" STREQUAL "")
+# quickfix using the path of the first library in roscpp_LIBRARIES
+execute_process(COMMAND bash "-c" "dirname -z $(echo \"${roscpp_LIBRARIES}\" | cut -f1 -d ';')" OUTPUT_VARIABLE roscpp_LINK_DIRECTORIES)
+endif()
+
+include_directories(${roscpp_INCLUDE_DIRS})
+link_directories(${roscpp_LINK_DIRECTORIES})
+
+include_directories(${CMAKE_SOURCE_DIR})
 set(LD_FLAGS "-lpthread -lrosconsole -lroscpp -lroscpp_serialization -lzmq -lprotobuf -lfmt")
 
 file(GLOB CFILES "tyndal/*/*.c*")
