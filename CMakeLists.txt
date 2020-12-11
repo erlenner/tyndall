@@ -31,7 +31,7 @@ endforeach(HEADER)
 
 file(GLOB EXAMPLES "examples/*.c*")
 foreach(EXAMPLE ${EXAMPLES})
-execute_process(COMMAND bash "-c" "basename -z $(echo ${EXAMPLE} | cut -f 1 -d '.')" OUTPUT_VARIABLE EXAMPLE_TARGET)
+execute_process(COMMAND bash "-c" "basename -z ${EXAMPLE} | cut -zf 1 -d '.'" OUTPUT_VARIABLE EXAMPLE_TARGET) # strip path and extension
 add_executable(${EXAMPLE_TARGET} ${EXAMPLE})
 target_link_libraries(${EXAMPLE_TARGET} ${TYNDAL_TARGET})
 install(TARGETS ${EXAMPLE_TARGET} DESTINATION bin)
