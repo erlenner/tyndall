@@ -1,5 +1,12 @@
 #pragma once
 
+/*
+  log.h
+  log_error, log_warning etc. follows printf syntax.
+  Format strings follows fmtlib format if LOG_FMT is defined,
+  It uses printf format instead if LOG_PRINTF is defined.
+*/
+
 #ifdef __cplusplus
 #include <string>
 #include <cstring>
@@ -26,6 +33,13 @@
 #define log_cat_info(cat, ...) log_cat_log(cat, log_level_info, __VA_ARGS__)
 #define log_cat_debug(cat, ...) log_cat_log(cat, log_level_debug, __VA_ARGS__)
 
+/*
+  log_init(pattern, file_path)
+  - pattern (cstring / literal): follows spdlog set_pattern style: https://github.com/gabime/spdlog/wiki/3.-Custom-formatting
+  - file_path (cstring / literal): path to log output file. Will append.
+
+  Needs to run before first log call
+*/
 #define log_init log_init_impl
 #define log_str log_str_impl
 #define log_level log_level_impl
@@ -67,12 +81,14 @@ extern "C"
 #endif
   /*
     Reads the log level from the LOG_LEVEL environment variable.
-    Optional global / fallback level first, then key values of categories and debug level.
+    Optional global / fallback level first, then key-values of categories and debug level.
     Default category is function name.
+    For each category my_cat the corresponding category FILE_my_cat controls log file output.
     Examples:
       LOG_LEVEL=error ./my_program
+      LOG_LEVEL=error,my_category:debug ./my_program
       LOG_LEVEL=debug,my_category:error,FILE_my_category:error ./my_program
-      LOG_LEVEL=FILE*:error,my_*e*ry:info ./my_program
+      LOG_LEVEL=FILE*:error,my_ca*e*ry:info ./my_program
   */
   log_level_t log_level(const char* cat);
 #ifdef __cplusplus
@@ -114,7 +130,7 @@ do { \
   extern "C"
   {
   #endif
-    void spdlog_log_init(const char *format, const char *file_path);
+    void spdlog_log_init(const char *pattern, const char *file_path);
     #define log_init_impl spdlog_log_init
 
     void spdlog_log_str(const char* str, log_level_t lvl, log_src_info_t* src_info);

@@ -1,5 +1,5 @@
-#define LOG_PRINTF
-//#define LOG_FMT
+//#define LOG_PRINTF // printf format
+#define LOG_FMT // fmtlib format
 #include <tyndall/log/log.h>
 
 #include <unistd.h>
@@ -30,26 +30,23 @@ int main()
 {
   log_init("", "out.log");
 
-  log_debug("hei %d\n", 3);
-  log_debug("hei {}\n", 4);
-  //log_debug("hei %d\n", 5);
-  //log_debug("hei\n");
-  //log_debug("hei {}\n", 3);
+  log_debug("hei %d\n", 3); // printf format
+  log_debug("hei {}\n", 4); // fmt format
 
   signal(SIGINT, cb_sig);
 
 
   while(run)
   {
-    log_debug("loopityloop\n");
+    log_debug("debug statement\n");
 
-    log_cat_debug("thecat", "CAAAAAAAAAAT\n");
-    log_cat_once_error("thecat", "WRONG CAt %d\n", 5);
+    log_cat_debug("my_category", "CAAAAAAAAAAT\n");
+    log_cat_once_error("my_category", "WRONG CAt %d\n", 5);
 
-    log_once_error("loopityloop\n");
+    log_once_error("error statement printed once\n");
 
-    //S s = { .a = 1, .b = 2, };
-    //log_debug("s: {}\n", s);
+    S s = { .a = 1, .b = 2, };
+    log_once_info("s: {}\n", s);
 
     usleep(100000);
   }

@@ -56,7 +56,7 @@ struct logger_t
   std::shared_ptr<spdlog::logger> file_logger;
 };
 
-const logger_t& spdlog_get_loggers(const char *format = "", const char* file_path = "")
+const logger_t& spdlog_get_loggers(const char *pattern = "", const char* file_path = "")
 {
   static logger_t loggers;
 
@@ -80,8 +80,8 @@ const logger_t& spdlog_get_loggers(const char *format = "", const char* file_pat
 
     spdlog::set_level(spdlog::level::trace);
 
-    if (strlen(format) > 0)
-      spdlog::set_pattern(format);
+    if (strlen(pattern) > 0)
+      spdlog::set_pattern(pattern);
     else
       spdlog::set_pattern(SPDLOG_DEFAULT_PATTERN);
 
@@ -91,13 +91,13 @@ const logger_t& spdlog_get_loggers(const char *format = "", const char* file_pat
   return loggers;
 }
 
-void spdlog_log_init(const char *format, const char *file_path)
+void spdlog_log_init(const char *pattern, const char *file_path)
 {
-  if (format == NULL)
-    format = "";
+  if (pattern == NULL)
+    pattern = "";
   if (file_path == NULL)
     file_path = "";
-  spdlog_get_loggers(format, file_path); // first call initializes logger
+  spdlog_get_loggers(pattern, file_path); // first call initializes logger
 }
 
 void spdlog_log_str_impl(const char* str, log_level_t lvl, log_src_info_t* src_info)
