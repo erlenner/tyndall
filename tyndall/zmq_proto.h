@@ -175,6 +175,11 @@ public:
     zmq_proto_assert(rc == 0);
   }
 
+  /*
+    checks for pattern at beginning of msg
+    return value: 0 if match, -1 if no match
+    errno: EBADMSG if no match
+  */
   int match(const char* pattern, int pattern_length)
   {
     int rc;
@@ -219,6 +224,10 @@ public:
 
 enum send_recv_flags { NONE = 0, DONTWAIT = ZMQ_DONTWAIT, SNDMORE = ZMQ_SNDMORE };
 
+/*
+  sends two-part message. first is id, second is proto packed in Any proto
+  errno: EAGAIN if the outbound message queue was full
+*/
 template<socket_type_t socket_type>
 int send(const google::protobuf::Any& payload, const socket_t<socket_type>& socket, const char *id, int id_len, send_recv_flags flags = NONE)
 {
@@ -236,7 +245,8 @@ int send(const google::protobuf::Any& payload, const socket_t<socket_type>& sock
   {
     const int payload_size = payload.ByteSizeLong();
     char payload_buf[payload_size];
-    payload.SerializeToArray(payload_buf, payload_size);
+    bool ser_rc = payload.SerializeToArray(payload_buf, payload_size);
+    zmq_proto_assert(ser_rc);
 
     // then send payload
     const int sent = zmq_send(socket.zmq_handle(), payload_buf, payload_size, static_cast<int>(flags));
@@ -253,6 +263,7 @@ int send(const google::protobuf::Any& payload, const socket_t<socket_type>& sock
   return rc;
 }
 
+// runtime id helper
 template<socket_type_t socket_type, typename Message>
 std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
 send(const Message& msg, const socket_t<socket_type>& socket, const char *id, int id_len, send_recv_flags flags = NONE)
@@ -264,6 +275,7 @@ send(const Message& msg, const socket_t<socket_type>& socket, const char *id, in
   return send(payload, socket, id, id_len, flags);
 }
 
+// compile time id helper
 template<socket_type_t socket_type, typename Message, int id_size>
 std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
 send(const Message& msg, const socket_t<socket_type>& socket, const char(&id)[id_size], send_recv_flags flags = NONE)
@@ -274,6 +286,9 @@ send(const Message& msg, const socket_t<socket_type>& socket, const char(&id)[id
   return send<socket_type, Message>(msg, socket, id, id_len, flags);
 }
 
+/*
+  errno: EAGAIN if the inbound message queue was empty
+*/
 template<socket_type_t socket_type>
 int recv(msg_t& msg, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
 {
@@ -296,6 +311,10 @@ int recv(msg_t& msg, const socket_t<socket_type>& socket, send_recv_flags flags 
   return rc;
 }
 
+/*
+  receives another part of a multipart message
+  errno: EOPNOTSUPP if there were no more message parts to receive
+*/
 template<socket_type_t socket_type>
 int recv_more(msg_t& msg, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
 {
@@ -319,6 +338,10 @@ int recv_more(msg_t& msg, const socket_t<socket_type>& socket, send_recv_flags f
   return rc;
 }
 
+/*
+  receives all remaining parts of a multipart message
+  errno: EOPNOTSUPP
+*/
 template<socket_type_t socket_type>
 int recv_more(const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
 {
@@ -332,12 +355,15 @@ int recv_more(const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
   return rc;
 }
 
-template<socket_type_t socket_type, typename Message>
-std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
-recv_more(Message& proto_msg, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
+/*
+  receives another part of a multipart message, and parses into the Any proto
+  errno: EOPNOTSUPP if there were no more message parts to receive
+  errno: EPROTO if the proto could not be parsed
+*/
+template<socket_type_t socket_type>
+int recv_more(google::protobuf::Any& any, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
 {
   msg_t msg;
-  google::protobuf::Any any;
 
   int rc = recv_more(msg, socket, flags);
 
@@ -348,6 +374,28 @@ recv_more(Message& proto_msg, const socket_t<socket_type>& socket, send_recv_fla
     rc = -1;
     errno = EPROTO;
   }
+  else
+    rc = 0;
+
+  return rc;
+}
+
+/*
+  receives another part of a multipart message, and parses into proto
+  errno: EOPNOTSUPP if there were no more message parts to receive
+  errno: EPROTO if the proto could not be parsed
+  errno: EBADMSG if the proto was of the wrong type
+*/
+template<socket_type_t socket_type, typename Message>
+std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
+recv_more(Message& proto_msg, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
+{
+  google::protobuf::Any any;
+
+  int rc = recv_more(any, socket, flags);
+
+  if (rc != 0)
+    rc = -1;
   else if (!any.Is<Message>())
   {
     rc = -1;
@@ -363,26 +411,14 @@ recv_more(Message& proto_msg, const socket_t<socket_type>& socket, send_recv_fla
   return rc;
 }
 
-template<socket_type_t socket_type>
-int recv_more(google::protobuf::Any& proto_msg, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
-{
-  msg_t msg;
-
-  int rc = recv_more(msg, socket, flags);
-
-  if (rc != 0)
-    rc = -1;
-  else if (!proto_msg.ParseFromArray(msg.data(), msg.size()))
-  {
-    rc = -1;
-    errno = EPROTO;
-  }
-  else
-    rc = 0;
-
-  return rc;
-}
-
+/*
+  receives two parts of a multipart message. Matches first with id and parses second into proto
+  errno: EAGAIN if the inbound message queue was empty
+  errno: EBADMSG if the id didn't match
+  errno: EOPNOTSUPP if there were no more message parts to receive after first part
+  errno: EPROTO if the proto could not be parsed
+  errno: EBADMSG if the proto was of the wrong type
+*/
 template<socket_type_t socket_type, typename Message, int id_size>
 std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
 recv(Message& proto_msg, const socket_t<socket_type>& socket, const char(&id)[id_size], send_recv_flags flags = NONE)
@@ -397,6 +433,11 @@ recv(Message& proto_msg, const socket_t<socket_type>& socket, const char(&id)[id
   return rc;
 }
 
+/*
+  receives two parts of a multipart message and discards them
+  errno: EAGAIN if the inbound message queue was empty
+  errno: EOPNOTSUPP if there were no more message parts to receive after first part
+*/
 template<socket_type_t socket_type>
 int recv(const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
 {
