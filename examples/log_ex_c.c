@@ -1,6 +1,6 @@
 #define LOG_PRINTF
 //#define LOG_FMT
-#include <tyndal/log/log.h>
+#include <tyndall/log/log.h>
 
 #include <unistd.h>
 #include <signal.h>

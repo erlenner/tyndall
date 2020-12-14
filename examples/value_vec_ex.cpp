@@ -1,4 +1,4 @@
-#include <tyndal/meta/value_vec.h>
+#include <tyndall/meta/value_vec.h>
 #include <cstdio>
 
 int main()

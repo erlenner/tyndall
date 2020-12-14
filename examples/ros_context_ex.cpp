@@ -1,4 +1,4 @@
-#include <tyndal/ros_context.h>
+#include <tyndall/ros_context.h>
 #include <std_msgs/Int32.h>
 #include <csignal>
 #include <thread>

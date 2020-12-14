@@ -1,4 +1,4 @@
-#include <tyndal/zmq_proto.h>
+#include <tyndall/zmq_proto.h>
 #include <google/protobuf/wrappers.pb.h>
 #include <csignal>
 #include <thread>
