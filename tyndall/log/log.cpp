@@ -56,7 +56,7 @@ struct logger_t
   std::shared_ptr<spdlog::logger> file_logger;
 };
 
-const logger_t& spdlog_get_loggers(const char *pattern = "", const char* file_path = "")
+const logger_t& spdlog_get_loggers(const char *pattern = NULL, const char* file_path = NULL)
 {
   static logger_t loggers;
 
@@ -70,7 +70,7 @@ const logger_t& spdlog_get_loggers(const char *pattern = "", const char* file_pa
     stdout_logger->set_level(spdlog::level::trace);
     loggers.stdout_logger = std::move(stdout_logger);
 
-    if (strlen(file_path) > 0)
+    if ((file_path != NULL) && (strlen(file_path) > 0))
     {
       auto file_logger = spdlog::basic_logger_mt("file", file_path);
       file_logger->set_level(spdlog::level::trace);
@@ -80,7 +80,7 @@ const logger_t& spdlog_get_loggers(const char *pattern = "", const char* file_pa
 
     spdlog::set_level(spdlog::level::trace);
 
-    if (strlen(pattern) > 0)
+    if (pattern != NULL)
       spdlog::set_pattern(pattern);
     else
       spdlog::set_pattern(SPDLOG_DEFAULT_PATTERN);
@@ -93,10 +93,6 @@ const logger_t& spdlog_get_loggers(const char *pattern = "", const char* file_pa
 
 void spdlog_log_init(const char *pattern, const char *file_path)
 {
-  if (pattern == NULL)
-    pattern = "";
-  if (file_path == NULL)
-    file_path = "";
   spdlog_get_loggers(pattern, file_path); // first call initializes logger
 }
 
