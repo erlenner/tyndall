@@ -35,9 +35,11 @@ foreach(HEADER ${HEADERS})
   install(FILES ${HEADER} DESTINATION include/${HEADER_DIR})
 endforeach(HEADER)
 
+set(EXAMPLE_PREFIX "${CMAKE_PROJECT_NAME}_ex_")
+
 file(GLOB EXAMPLES "examples/*.c*")
 foreach(EXAMPLE ${EXAMPLES})
-  execute_process(COMMAND bash "-c" "basename -z ${EXAMPLE} | cut -zf 1 -d '.'" OUTPUT_VARIABLE EXAMPLE_TARGET) # strip path and extension
+  execute_process(COMMAND bash "-c" "printf ${EXAMPLE_PREFIX}$(basename ${EXAMPLE} | cut -f 1 -d '.')" OUTPUT_VARIABLE EXAMPLE_TARGET)
   add_executable(${EXAMPLE_TARGET} ${EXAMPLE})
   target_link_libraries(${EXAMPLE_TARGET} ${TYNDAL_TARGET})
   install(TARGETS ${EXAMPLE_TARGET} DESTINATION bin)
@@ -46,7 +48,7 @@ endforeach(EXAMPLE)
 
 file(GLOB SUBEXAMPLES "examples/*/*.c*")
 foreach(EXAMPLE ${SUBEXAMPLES})
-  execute_process(COMMAND bash "-c" "printf $(dirname ${EXAMPLE} | xargs basename)_$(basename -z ${EXAMPLE} | cut -zf 1 -d '.')" OUTPUT_VARIABLE EXAMPLE_TARGET) # strip path and extension
+  execute_process(COMMAND bash "-c" "printf ${EXAMPLE_PREFIX}$(dirname ${EXAMPLE} | xargs basename)_$(basename ${EXAMPLE} | cut -f 1 -d '.')" OUTPUT_VARIABLE EXAMPLE_TARGET)
   add_executable(${EXAMPLE_TARGET} ${EXAMPLE})
   target_link_libraries(${EXAMPLE_TARGET} ${TYNDAL_TARGET})
   install(TARGETS ${EXAMPLE_TARGET} DESTINATION bin)
