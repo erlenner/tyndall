@@ -91,12 +91,12 @@ const logger_t& spdlog_get_loggers(const char *pattern = NULL, const char* file_
   return loggers;
 }
 
-void spdlog_log_init(const char *pattern, const char *file_path)
+void log_init_impl(const char *pattern, const char *file_path)
 {
   spdlog_get_loggers(pattern, file_path); // first call initializes logger
 }
 
-void spdlog_log_str_impl(const char* str, log_level_t lvl, log_src_info_t* src_info)
+void log_str_impl(const char* str, log_level_t lvl, log_src_info_t* src_info)
 {
   static auto loggers = spdlog_get_loggers();
 
@@ -109,11 +109,6 @@ void spdlog_log_str_impl(const char* str, log_level_t lvl, log_src_info_t* src_i
 
   if ((loggers.file_logger) && (src_info->write_file))
     loggers.file_logger->log(spdlog_src_info, spdlog_lvl, str);
-}
-
-void spdlog_log_str(const char* str, log_level_t lvl, log_src_info_t* src_info)
-{
-  spdlog_log_str_impl(str, lvl, src_info);
 }
 
 

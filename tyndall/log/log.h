@@ -120,48 +120,38 @@ do { \
   } \
 } while(0)
 
-// use spdlog by default
-#ifndef LOG_SPDLOG
-  #define LOG_SPDLOG
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+  void log_init_impl(const char *pattern, const char *file_path);
+
+  void log_str_impl(const char* str, log_level_t lvl, log_src_info_t* src_info);
+#ifdef __cplusplus
+} // extern "C"
 #endif
 
-#ifdef LOG_SPDLOG
-  #ifdef __cplusplus
-  extern "C"
-  {
-  #endif
-    void spdlog_log_init(const char *pattern, const char *file_path);
-    #define log_init_impl spdlog_log_init
-
-    void spdlog_log_str(const char* str, log_level_t lvl, log_src_info_t* src_info);
-    #define log_str_impl spdlog_log_str
-  #ifdef __cplusplus
-  } // extern "C"
+#if defined(LOG_FMT)
+  #ifndef __cplusplus
+    #error fmt formatting is only available for C++, not C
   #endif
 
-  #if defined(LOG_FMT)
-    #ifndef __cplusplus
-      #error fmt formatting is only available for C++, not C
-    #endif
+  #include <fmt/format.h>
+  #include <fmt/ostream.h>
 
-    #include <fmt/format.h>
-    #include <fmt/ostream.h>
+  #define log_format_impl(_fmt, lvl, src_info, ...) do { \
+    std::string str = fmt::format(_fmt __VA_OPT__(,) __VA_ARGS__); \
+    log_str_impl(str.c_str(), lvl, src_info); \
+  } while(0)
 
-    #define log_format_impl(_fmt, lvl, src_info, ...) do { \
-      std::string str = fmt::format(_fmt __VA_OPT__(,) __VA_ARGS__); \
-      log_str_impl(str.c_str(), lvl, src_info); \
-    } while(0)
+#elif defined(LOG_PRINTF)
 
-  #elif defined(LOG_PRINTF)
+  #define log_format_impl(fmt, lvl, src_info, ...) do { \
+    char buf[1024]; \
+    snprintf(buf, sizeof(buf), fmt __VA_OPT__(,) __VA_ARGS__); \
+    log_str_impl(buf, lvl, src_info); \
+  } while(0)
 
-    #define log_format_impl(fmt, lvl, src_info, ...) do { \
-      char buf[1024]; \
-      snprintf(buf, sizeof(buf), fmt __VA_OPT__(,) __VA_ARGS__); \
-      log_str_impl(buf, lvl, src_info); \
-    } while(0)
-
-  #else
-    #error You need to specify either LOG_FMT or LOG_PRINTF
-  #endif
-
+#else
+  #error You need to specify either LOG_FMT or LOG_PRINTF
 #endif
