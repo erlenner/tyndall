@@ -42,3 +42,12 @@ foreach(EXAMPLE ${EXAMPLES})
   target_link_libraries(${EXAMPLE_TARGET} ${TYNDAL_TARGET})
   install(TARGETS ${EXAMPLE_TARGET} DESTINATION bin)
 endforeach(EXAMPLE)
+
+
+file(GLOB SUBEXAMPLES "examples/*/*.c*")
+foreach(EXAMPLE ${SUBEXAMPLES})
+  execute_process(COMMAND bash "-c" "printf $(dirname ${EXAMPLE} | xargs basename)_$(basename -z ${EXAMPLE} | cut -zf 1 -d '.')" OUTPUT_VARIABLE EXAMPLE_TARGET) # strip path and extension
+  add_executable(${EXAMPLE_TARGET} ${EXAMPLE})
+  target_link_libraries(${EXAMPLE_TARGET} ${TYNDAL_TARGET})
+  install(TARGETS ${EXAMPLE_TARGET} DESTINATION bin)
+endforeach(EXAMPLE)
