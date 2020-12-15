@@ -15,19 +15,18 @@ void signal_handler(int sig)
 int main()
 {
   zmq_proto::context_t context{1};
-  zmq_proto::socket_t<zmq_proto::PUB> socket(context, "tcp://*:5444");
+  zmq_proto::socket_t<zmq_proto::SUB> socket(context, "tcp://127.0.0.1:5444");
 
   signal(SIGINT, signal_handler);
 
   for(int i=0; run; ++i)
   {
     google::protobuf::Int32Value msg;
-    msg.set_value(i);
 
-    printf("sending value: %d\n", msg.value());
-
-    int rc = zmq_proto::send(msg, socket, "zmq_proto_ex");
+    int rc = zmq_proto::recv(msg, socket, "zmq_proto_ex");
     assert(rc == 0);
+
+    printf("got value: %d\n", msg.value());
 
     std::this_thread::sleep_for(std::chrono::milliseconds{3});
   }
