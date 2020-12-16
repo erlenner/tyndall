@@ -13,7 +13,7 @@ void signal_handler(int sig)
 
 int main(int argc, char** argv)
 {
-  ros_context::init(argc, argv, std::chrono::milliseconds{3}, "comm");
+  ros_context::init(argc, argv, std::chrono::milliseconds{3}, "ex_ros_context");
 
   signal(SIGINT, signal_handler);
 
@@ -21,7 +21,7 @@ int main(int argc, char** argv)
   {
     std_msgs::Int32 msg;
     msg.data = i;
-    ros_context_write(msg, "/ros_context_ex");
+    ros_context_write(msg, "/ex_ros_context");
 
     std::this_thread::sleep_for(std::chrono::milliseconds{3});
   }
