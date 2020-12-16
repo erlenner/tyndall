@@ -42,6 +42,7 @@ int main()
     int a = 1;
     unsigned b = 2;
   };
+  constexpr value_vec<S0,5> s0;
 
   struct S1
   {
@@ -50,16 +51,21 @@ int main()
     char e = 5;
     //int b = 6; // error: dont use same member names as in S0 since they will be ambiguous
   };
-
-  constexpr value_vec<S0,5> s0;
   constexpr value_vec<S1,5> s1;
 
-  static constexpr auto s = mux(s0, s1);
+  struct S2
+  {
+    long f = 6;
+    short g = 7;
+  };
+  constexpr value_vec<S2,5> s2;
+
+  static constexpr auto s = mux(s0, s1, s2);
 
   iterate<s.size()>
   ([](auto index){
     constexpr auto v = s[index];
-    printf("s: %d %d %d %d %d\n", v.a, v.b, v.c, v.d, v.e);
+    printf("s: %d %d %d %d %d %d %d\n", v.a, v.b, v.c, v.d, v.e, v.f, v.g);
   });
 
   return 0;
