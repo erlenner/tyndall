@@ -55,10 +55,10 @@ int main()
 
   struct S2
   {
-    long f = 6;
-    short g = 7;
+    long f;
+    short g;
   };
-  constexpr value_vec<S2,5> s2;
+  constexpr value_vec<S2,5> s2{{6,7}};
 
   static constexpr auto s = mux(s0, s1, s2);
 

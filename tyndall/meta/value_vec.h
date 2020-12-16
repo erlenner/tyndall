@@ -20,6 +20,9 @@ public:
   explicit constexpr value_vec() noexcept
   {}
 
+  explicit constexpr value_vec(T entry) noexcept
+  {}
+
   constexpr value_vec<T, 1> operator+(T entry) const noexcept
   {
     return value_vec<T, 1>(*this, entry);
@@ -65,6 +68,11 @@ class value_vec<T, N, typename std::enable_if<N != 0>::type> : public value_vec<
 public:
 
   explicit constexpr value_vec() noexcept
+  {}
+
+  explicit constexpr value_vec(T entry) noexcept
+  : value_vec<T, N-1>(entry)
+  , entry(entry)
   {}
 
   explicit constexpr value_vec(value_vec<T, N-1> rhs, T entry) noexcept
