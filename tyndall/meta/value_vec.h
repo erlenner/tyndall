@@ -1,11 +1,11 @@
+#pragma once
+#include <type_traits>
 /*
   value_vec is a vector / array-like data structure with value semantics.
   It is mostly useful for compile time logic.
   All operations gives a new value, with a different type.
   Only stack operations are supported for now, ie. + and --.
 */
-
-#include <type_traits>
 
 template<typename T, int N=0, typename enable = void>
 class value_vec
@@ -121,25 +121,3 @@ public:
     f(last());
   }
 };
-
-
-template<typename A, typename B>
-struct muxer
-{
-  A a;
-  B b;
-};
-
-template<typename A, typename B, int N>
-constexpr std::enable_if_t<N >= 1, value_vec<muxer<A,B>,N>>
-mux(value_vec<A,N> a, value_vec<B,N> b)
-{
-  return mux(--a, --b) + muxer<A,B>{ .a = a.last(), .b = b.last() };
-}
-
-template<typename A, typename B, int N>
-constexpr std::enable_if_t<N == 0, value_vec<muxer<A,B>,N>>
-mux(value_vec<A,N> a, value_vec<B,N> b)
-{
-  return value_vec<muxer<A,B>,N>{};
-}

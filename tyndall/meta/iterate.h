@@ -1,3 +1,4 @@
+#pragma once
 #include <type_traits>
 
 template<int index, typename UnaryFunction>
