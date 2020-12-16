@@ -35,6 +35,11 @@ public:
     return reinterpret_cast<const T*>(this);
   }
 
+  constexpr const T* end() const noexcept
+  {
+    return begin();
+  }
+
   static constexpr int size() noexcept
   {
     return 0;
@@ -59,6 +64,9 @@ class value_vec<T, N, typename std::enable_if<N != 0>::type> : public value_vec<
 
 public:
 
+  explicit constexpr value_vec() noexcept
+  {}
+
   explicit constexpr value_vec(value_vec<T, N-1> rhs, T entry) noexcept
   : value_vec<T, N-1>(rhs)
   , entry(entry)
@@ -82,14 +90,9 @@ public:
       return value_vec<T, N-1>::operator[](index);
   }
 
-  constexpr const T* begin() const noexcept
-  {
-    return value_vec<T, N-1>::begin();
-  }
-
   constexpr const T* end() const noexcept
   {
-    return begin() + N;
+    return value_vec<T, N-1>::begin() + N;
   }
 
   constexpr const T last() const noexcept
@@ -118,3 +121,25 @@ public:
     f(last());
   }
 };
+
+
+template<typename A, typename B>
+struct muxer
+{
+  A a;
+  B b;
+};
+
+template<typename A, typename B, int N>
+constexpr std::enable_if_t<N >= 1, value_vec<muxer<A,B>,N>>
+mux(value_vec<A,N> a, value_vec<B,N> b)
+{
+  return mux(--a, --b) + muxer<A,B>{ .a = a.last(), .b = b.last() };
+}
+
+template<typename A, typename B, int N>
+constexpr std::enable_if_t<N == 0, value_vec<muxer<A,B>,N>>
+mux(value_vec<A,N> a, value_vec<B,N> b)
+{
+  return value_vec<muxer<A,B>,N>{};
+}
