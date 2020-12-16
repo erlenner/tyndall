@@ -118,18 +118,3 @@ public:
     f(last());
   }
 };
-
-//template<typename T, typename UnaryFunction>
-//constexpr void value_vec_iterate(value_vec<T,0> v, UnaryFunction f) noexcept
-//{
-//}
-//
-//template<typename T, int N, typename UnaryFunction>
-//constexpr void value_vec_iterate(value_vec<T,N> v, UnaryFunction f) noexcept
-//{
-//  value_vec_iterate(--v,f);
-//  //f(v.last());
-//  
-//  constexpr int index = v.size() - 1;
-//  f(std::integral_constant<int, index>());
-//}

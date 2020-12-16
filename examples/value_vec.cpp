@@ -1,4 +1,5 @@
 #include <tyndall/meta/value_vec.h>
+#include <tyndall/meta/iterate.h>
 #include <cstdio>
 
 int main()
@@ -15,7 +16,7 @@ int main()
   // value semantics version of pop
   constexpr auto v1 = --v0;
   printf("v1: ");
-  for (int i=0; i< sizeof(v1) / sizeof(v1[0]); ++i)
+  for (unsigned i=0; i< sizeof(v1) / sizeof(v1[0]); ++i)
   {
     int v = v1[i];
     printf("%d ", v);
@@ -25,7 +26,8 @@ int main()
   // compile time iteration:
   static constexpr auto v2 = v1 + 11;
   printf("v2: ");
-  v2.iterate([](auto index)
+  iterate<v2.size()>
+  ([](auto index)
   {
     constexpr int v = v2[index];
     static_assert(v <= 11);
