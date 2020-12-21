@@ -1,9 +1,22 @@
-#include <ros/ros.h>
+#include <chrono>
 #include <stdint.h>
 #include <optional>
 #include <mutex>
 #include <thread>
-#include <errno.h>
+#include <cerrno>
+#ifdef NO_ROS
+// mock
+namespace ros_context
+{
+  int shutdown()
+  { return 0; }
+  int init(int argc, char** argv, std::chrono::milliseconds loop_sleep = std::chrono::milliseconds{3}, const char *node_name = "default_node_name")
+  { return 0;}
+}
+#define ros_context_read(msg, ...) do { (void)sizeof(msg); } while(0)
+#define ros_context_write(msg, ...) do { (void)sizeof(msg); } while(0)
+#else
+#include <ros/ros.h>
 
 // ros_context wraps ros initialization, destruction and pub sub pattern in a thread safe interface.
 // lazy initialization of ros communication objects is used for ease of use
@@ -155,3 +168,4 @@ namespace ros_context
   using namespace ros_context;                                \
   ros_context::lazy_write<typeof(msg), id ## _hash>(msg, id);  \
 })
+#endif
