@@ -1,6 +1,7 @@
 #include <tyndall/meta/value_vec.h>
 #include <tyndall/meta/iterate.h>
 #include <tyndall/meta/mux.h>
+#include <tyndall/meta/strval.h>
 #include <cstdio>
 
 int main()
@@ -67,6 +68,11 @@ int main()
     constexpr auto v = s[index];
     printf("s: %d %d %d %d %d %d %d\n", v.a, v.b, v.c, v.d, v.e, v.f, v.g);
   });
+
+
+  constexpr auto sv = "hei"_strval;
+  printf("strval: %s\n", &sv);
+  printf("strval sum: %s\n", ("hei "_strval + "du"_strval).c_str());
 
   return 0;
 }
