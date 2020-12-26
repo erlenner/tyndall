@@ -1,3 +1,4 @@
+#pragma once
 #include <chrono>
 #include <stdint.h>
 #include <optional>
