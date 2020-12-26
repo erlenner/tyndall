@@ -2,39 +2,18 @@
 
 // compile time string which obeys "str"_strval == "str"_strval
 
-template<char Head, char... Tail>
+template<char... Args>
 struct strval
 {
-  char head = Head;
-  strval<Tail...> tail = strval<Tail...>();
-
   template<char... Rhs>
   constexpr auto operator+(strval<Rhs...> rhs) const noexcept
   {
-    return strval<Head, Tail..., Rhs...>();
+    return strval<Args..., Rhs...>();
   }
 
   constexpr const char* c_str() const noexcept
   {
-    return &head;
-  }
-};
-
-template<char Last>
-struct strval<Last>
-{
-  char last = Last;
-  char null = '\0';
-
-  template<char... Rhs>
-  constexpr auto operator+(strval<Rhs...> rhs) const noexcept
-  {
-    return strval<Last, Rhs...>();
-  }
-
-  constexpr const char* c_str() const noexcept
-  {
-    return &last;
+    return (const char[]){ Args..., '\0'};
   }
 };
 

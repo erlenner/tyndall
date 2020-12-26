@@ -71,7 +71,7 @@ int main()
 
 
   constexpr auto sv = "hei"_strval;
-  printf("strval: %s\n", &sv);
+  printf("strval: %s\n", sv.c_str());
   printf("strval sum: %s\n", ("hei "_strval + "du"_strval).c_str());
 
   return 0;
