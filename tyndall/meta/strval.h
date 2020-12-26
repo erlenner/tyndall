@@ -11,7 +11,7 @@ struct strval
     return strval<Args..., Rhs...>();
   }
 
-  constexpr const char* c_str() const noexcept
+  static constexpr const char* c_str() noexcept
   {
     return (const char[]){ Args..., '\0'};
   }

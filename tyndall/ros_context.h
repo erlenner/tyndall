@@ -18,6 +18,8 @@ namespace ros_context
 #else
 #include <ros/ros.h>
 
+#include "tyndall/meta/strval.h"
+
 // ros_context wraps ros initialization, destruction and pub sub pattern in a thread safe interface.
 // lazy initialization of ros communication objects is used for ease of use
 namespace ros_context
@@ -66,8 +68,8 @@ namespace ros_context
     return 0;
   }
 
-  template<typename Message, int id_hash>
-  int lazy_read(Message& msg, const char *id)
+  template<typename Message, typename Id>
+  int lazy_read(Message& msg, Id)
   {
     static Message save;
     static std::mutex save_mutex;
@@ -77,7 +79,7 @@ namespace ros_context
     {
       std::lock_guard<typeof(ros_mutex)> guard(ros_mutex);
 
-      static ros::Subscriber sub = nh->subscribe<Message>(id, 1,
+      static ros::Subscriber sub = nh->subscribe<Message>(Id::c_str(), 1,
         boost::function<void(const boost::shared_ptr<const Message>&)>
         ([](const boost::shared_ptr<const Message>& sub_msg)
         -> void {
@@ -135,37 +137,20 @@ namespace ros_context
     return rc;
   }
 
-  template<typename Message, int id_hash>
-  int lazy_write(const Message& msg, const char *id)
+  template<typename Message, typename Id>
+  int lazy_write(const Message& msg, Id)
   {
-    static ros::Publisher pub = nh->advertise<Message>(id, 1, true); // queue size 1 and latching
+    static ros::Publisher pub = nh->advertise<Message>(Id::c_str(), 1, true); // queue size 1 and latching
 
     pub.publish(msg);
 
     return 0;
   }
-
-  // helpers
-  constexpr uint32_t hash_fnv1a_32(const char* s, size_t count)
-  {
-    return ((count ? hash_fnv1a_32(s, count - 1) : 2166136261u) ^ s[count]) * 16777619u;
-  }
-
-  constexpr uint32_t operator ""_hash(const char* s, size_t count)
-  {
-    return hash_fnv1a_32(s, count);
-  }
 }
 
-#define ros_context_read(msg, id)                             \
-({                                                            \
-  using namespace ros_context;                                \
-  ros_context::lazy_read<typeof(msg), id ## _hash>(msg, id);  \
-})
+#define ros_context_read(msg, id) \
+  ros_context::lazy_read(msg, id ## _strval)
 
-#define ros_context_write(msg, id)                             \
-({                                                            \
-  using namespace ros_context;                                \
-  ros_context::lazy_write<typeof(msg), id ## _hash>(msg, id);  \
-})
+#define ros_context_write(msg, id) \
+  ros_context::lazy_write(msg, id ## _strval)
 #endif
