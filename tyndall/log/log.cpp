@@ -56,14 +56,14 @@ struct logger_t
   std::shared_ptr<spdlog::logger> file_logger;
 };
 
-const logger_t& spdlog_get_loggers(const char *pattern = NULL, const char* file_path = NULL)
+// initializes loggers on first call
+const logger_t& spdlog_get_loggers(const char *pattern = NULL, const char* file_path = NULL, bool* was_first_run = NULL)
 {
   static logger_t loggers;
 
   static bool first_run = true;
   if (first_run)
   {
-
     auto stdout_logger = spdlog::stdout_color_mt("stdout");
     //spdlog::register_logger(stdout_logger);
     //spdlog::set_default_logger(stdout_logger);
@@ -86,14 +86,23 @@ const logger_t& spdlog_get_loggers(const char *pattern = NULL, const char* file_
       spdlog::set_pattern(SPDLOG_DEFAULT_PATTERN);
 
     first_run = false;
+
+    if (was_first_run != NULL)
+      *was_first_run = true;
   }
+  else
+    if (was_first_run != NULL)
+      *was_first_run = false;
 
   return loggers;
 }
 
 void log_init_impl(const char *pattern, const char *file_path)
 {
-  spdlog_get_loggers(pattern, file_path); // first call initializes logger
+  bool did_init_loggers;
+  spdlog_get_loggers(pattern, file_path, &did_init_loggers);
+
+  assert(did_init_loggers); // log_init wont work if the loggers were already initialized implicitly by log_str
 }
 
 void log_str_impl(const char* str, log_level_t lvl, log_src_info_t* src_info)
