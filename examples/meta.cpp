@@ -3,7 +3,9 @@
 #include <tyndall/meta/mux.h>
 #include <tyndall/meta/strval.h>
 #include <tyndall/meta/varcb.h>
+#include <tyndall/meta/typemap.h>
 #include <cstdio>
+#include <typeinfo>
 
 int main()
 {
@@ -81,6 +83,31 @@ int main()
 
   cb(5);
   cb(SS0{5,3});
+
+
+  struct TLs{ int a; float b;};
+
+  static constexpr auto tl =
+  typemap<TLs>{}
+  .append<int>(TLs{5,3})
+  .append<SS0>(TLs{4,2})
+  ;
+
+  if(tl.match_exec(
+    [](const TLs& match) -> bool
+    {
+      return match.a == 4;
+    }
+    ,
+    [](auto& arg, const TLs& match)
+    {
+      printf("match: %d, %f\n", match.a, match.b);
+      printf("type: %s\n", typeid(arg).name());
+    }
+  ) == 0)
+    printf("tls success\n");
+  else
+    printf("no tls match\n");
 
   return 0;
 }
