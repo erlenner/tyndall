@@ -2,6 +2,7 @@
 #include <tyndall/meta/iterate.h>
 #include <tyndall/meta/mux.h>
 #include <tyndall/meta/strval.h>
+#include <tyndall/meta/varcb.h>
 #include <cstdio>
 
 int main()
@@ -73,6 +74,13 @@ int main()
   constexpr auto sv = "hei"_strval;
   printf("strval: %s\n", sv.c_str());
   printf("strval sum: %s\n", ("hei "_strval + "du"_strval).c_str());
+
+
+  struct SS0{ int a; float b;};
+  auto cb = create_varcb([](int a){ printf("a: %d\n", a); }, [](SS0 s){ printf("s: %d, %f\n", s.a, s.b);}, [](float b){ printf("b: %f\n", b); });
+
+  cb(5);
+  cb(SS0{5,3});
 
   return 0;
 }
