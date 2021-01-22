@@ -19,7 +19,7 @@ struct typevals<Type, Tail...> : public typevals<Tail...>
   {}
 
   template<typename Entry>
-  constexpr typevals<Entry, Type, Tail...> join(Entry entry) const noexcept
+  constexpr typevals<Entry, Type, Tail...> operator+(Entry entry) const noexcept
   {
     return typevals<Entry, Type, Tail...>(*this, entry);
   }
@@ -61,7 +61,7 @@ struct typevals<>
   {}
 
   template<typename Entry>
-  constexpr typevals<Entry> join(Entry entry) const noexcept
+  constexpr typevals<Entry> operator+(Entry entry) const noexcept
   {
     return typevals<Entry>(*this, entry);
   }

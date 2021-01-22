@@ -21,6 +21,12 @@ struct types<Type, Tail...> : public types<Tail...>
     return types<Entry, Type, Tail...>();
   }
 
+  template<typename Entry>
+  constexpr types<Entry, Type, Tail...> operator+(Entry&&) const noexcept
+  {
+    return join<Entry>();
+  }
+
   template<int index>
   static constexpr std::enable_if_t<index == sizeof...(Tail),
   Type> get() noexcept
@@ -46,6 +52,12 @@ struct types<>
   static constexpr types<Entry> join() noexcept
   {
     return types<Entry>();
+  }
+
+  template<typename Entry>
+  constexpr types<Entry> operator+(Entry&&) const noexcept
+  {
+    return join<Entry>();
   }
 
   template<int index>

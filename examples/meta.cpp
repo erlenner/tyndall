@@ -96,16 +96,17 @@ int main()
   cb(SS0{5,3});
 
 
-  struct TLs{ int a; float b;};
-
-  static constexpr auto tm =
-  types{}
-  .join<bool>()
-  .join<TLs>()
-  .join<SS0>()
-  ;
-
   {
+    printf("types:\n");
+    struct TLs{ int a; float b;};
+    struct S{ int a; float b;};
+
+    static constexpr auto tm =
+    types{}
+    + bool{}
+    + TLs{}
+    + S{}
+    ;
     constexpr auto res = tm.get<1>();
     printf("tm res: %s\n", typeid(res).name());
   }
@@ -117,9 +118,9 @@ int main()
       struct B{int a; float b;};
       static constexpr auto col =
       typevals{}
-      .join<int>(5)
-      .join<A>(A{4,2})
-      .join<B>(B{3,9})
+      + 5
+      + A{4,2}
+      + B{3,9}
       ;
 
       constexpr auto res = col.get<2>();
@@ -129,7 +130,7 @@ int main()
     {
       static constexpr auto c =
       typevals{}
-      .join<tstruct<int>>(tstruct<int>{5})
+      + tstruct<int>{5}
       ;
       constexpr auto res = c.get<0>();
       printf("c res: %s\n", typeid(res).name());
