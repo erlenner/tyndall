@@ -3,8 +3,8 @@
 #include <tyndall/meta/mux.h>
 #include <tyndall/meta/strval.h>
 #include <tyndall/meta/varcb.h>
-#include <tyndall/meta/typemap.h>
-#include <tyndall/meta/type_vals.h>
+#include <tyndall/meta/types.h>
+#include <tyndall/meta/typevals.h>
 #include <cstdio>
 #include <typeinfo>
 
@@ -99,7 +99,7 @@ int main()
   struct TLs{ int a; float b;};
 
   static constexpr auto tm =
-  typemap{}
+  types{}
   .join<bool>()
   .join<TLs>()
   .join<SS0>()
@@ -111,12 +111,12 @@ int main()
   }
 
   {
-    printf("type_vals:\n");
+    printf("typevals:\n");
     {
       struct A{int a; float b;};
       struct B{int a; float b;};
       static constexpr auto col =
-      type_vals{}
+      typevals{}
       .join<int>(5)
       .join<A>(A{4,2})
       .join<B>(B{3,9})
@@ -128,7 +128,7 @@ int main()
 
     {
       static constexpr auto c =
-      type_vals{}
+      typevals{}
       .join<tstruct<int>>(tstruct<int>{5})
       ;
       constexpr auto res = c.get<0>();
