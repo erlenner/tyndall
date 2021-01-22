@@ -89,12 +89,12 @@ int main()
 
   static constexpr auto tl =
   typemap<TLs>{}
-  .append<int>(TLs{5,3})
-  .append<SS0>(TLs{4,2})
+  .join<int>(TLs{5,3})
+  .join<SS0>(TLs{4,2})
   ;
 
   if(tl.match_exec(
-    [](const TLs& match) -> bool
+    [](auto& arg, const TLs& match) -> bool
     {
       return match.a == 4;
     }

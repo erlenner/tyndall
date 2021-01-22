@@ -20,17 +20,17 @@ struct typemap<Data, Type, Tail...> : public typemap<Data, Tail...>
   {}
 
   template<typename Entry>
-  constexpr typemap<Data, Entry, Type, Tail...> append(Data entry_data) const noexcept
+  constexpr typemap<Data, Entry, Type, Tail...> join(Data entry_data) const noexcept
   {
     return typemap<Data, Entry, Type, Tail...>(*this, entry_data);
   }
 
-  template<typename Exec>
-  constexpr int match_exec(bool (*match)(const Data&), Exec exec) const noexcept
+  template<typename Match, typename Exec>
+  constexpr int match_exec(Match match, Exec exec) const noexcept
   {
-    if (match(data))
+    Type instance;
+    if (match(instance, data))
     {
-      Type instance;
       exec(instance, data);
       return 0;
     }
@@ -69,13 +69,13 @@ struct typemap<Data>
   {}
 
   template<typename Entry>
-  constexpr typemap<Data, Entry> append(Data entry_data) const noexcept
+  constexpr typemap<Data, Entry> join(Data entry_data) const noexcept
   {
     return typemap<Data, Entry>(*this, entry_data);
   }
 
-  template<typename Exec>
-  constexpr int match_exec(bool (*match)(const Data&), Exec exec) const noexcept
+  template<typename Match, typename Exec>
+  constexpr int match_exec(Match match, Exec exec) const noexcept
   {
     return -1;
   }
