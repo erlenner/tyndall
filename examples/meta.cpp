@@ -107,6 +107,7 @@ int main()
     + TLs{}
     + S{}
     ;
+    printf("tm size: %d\n", tm.size());
     constexpr auto res = tm.get<1>();
     printf("tm res: %s\n", typeid(res).name());
   }
@@ -122,6 +123,7 @@ int main()
       + A{4,2}
       + B{3,9}
       ;
+      printf("col size: %d\n", col.size());
 
       constexpr auto res = col.get<2>();
       printf("col res: %s\n", typeid(res).name());

@@ -38,6 +38,11 @@ struct typevals<Type, Tail...> : public typevals<Tail...>
     return typevals<Tail...>::template get<index>();
   }
 
+  static constexpr int size() noexcept
+  {
+    return 1 + sizeof...(Tail);
+  }
+
 protected:
   template<int index>
   static constexpr std::enable_if_t<index == sizeof...(Tail),
@@ -64,6 +69,11 @@ struct typevals<>
   constexpr typevals<Entry> operator+(Entry entry) const noexcept
   {
     return typevals<Entry>(*this, entry);
+  }
+
+  static constexpr int size() noexcept
+  {
+    return 0;
   }
 
 protected:

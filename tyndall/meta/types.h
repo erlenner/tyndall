@@ -40,6 +40,11 @@ struct types<Type, Tail...> : public types<Tail...>
   {
     return types<Tail...>::template get<index>();
   }
+
+  static constexpr int size() noexcept
+  {
+    return 1 + sizeof...(Tail);
+  }
 };
 
 template<>
@@ -62,6 +67,11 @@ struct types<>
 
   template<int index>
   static constexpr int get() noexcept
+  {
+    return 0;
+  }
+
+  static constexpr int size() noexcept
   {
     return 0;
   }
