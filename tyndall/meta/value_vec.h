@@ -13,54 +13,6 @@ class value_vec
 
 
 template<typename T, int N>
-class alignas(T) value_vec<T, N, typename std::enable_if<N == 0>::type>
-{
-public:
-
-  explicit constexpr value_vec() noexcept
-  {}
-
-  explicit constexpr value_vec(T entry) noexcept
-  {}
-
-  constexpr value_vec<T, 1> operator+(T entry) const noexcept
-  {
-    return value_vec<T, 1>(*this, entry);
-  }
-
-  constexpr T operator[](int index) const noexcept
-  {
-    return T{};
-  }
-
-  constexpr const T* begin() const
-  {
-    return reinterpret_cast<const T*>(this);
-  }
-
-  constexpr const T* end() const noexcept
-  {
-    return begin();
-  }
-
-  static constexpr int size() noexcept
-  {
-    return 0;
-  }
-
-  template<typename UnaryFunction>
-  static constexpr void iterate(UnaryFunction f) noexcept
-  {
-  }
-
-  template<typename UnaryFunction>
-  void for_each(UnaryFunction f) const noexcept
-  {
-  }
-};
-
-
-template<typename T, int N>
 class value_vec<T, N, typename std::enable_if<N != 0>::type> : public value_vec<T, N-1>
 {
   T entry;
@@ -114,18 +66,51 @@ public:
   }
 
   template<typename UnaryFunction>
-  static constexpr void iterate(UnaryFunction f) noexcept
+  void for_each(UnaryFunction f) const noexcept
   {
-    value_vec<T,N-1>::iterate(f);
+    value_vec<T,N-1>::for_each(f);
+    f(last());
+  }
+};
 
-    constexpr int index = size() - 1;
-    f(std::integral_constant<int, index>());
+template<typename T, int N>
+class alignas(T) value_vec<T, N, typename std::enable_if<N == 0>::type>
+{
+public:
+
+  explicit constexpr value_vec() noexcept
+  {}
+
+  explicit constexpr value_vec(T entry) noexcept
+  {}
+
+  constexpr value_vec<T, 1> operator+(T entry) const noexcept
+  {
+    return value_vec<T, 1>(*this, entry);
+  }
+
+  constexpr T operator[](int index) const noexcept
+  {
+    return T{};
+  }
+
+  constexpr const T* begin() const
+  {
+    return reinterpret_cast<const T*>(this);
+  }
+
+  constexpr const T* end() const noexcept
+  {
+    return begin();
+  }
+
+  static constexpr int size() noexcept
+  {
+    return 0;
   }
 
   template<typename UnaryFunction>
   void for_each(UnaryFunction f) const noexcept
   {
-    value_vec<T,N-1>::for_each(f);
-    f(last());
   }
 };
