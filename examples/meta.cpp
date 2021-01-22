@@ -4,8 +4,19 @@
 #include <tyndall/meta/strval.h>
 #include <tyndall/meta/varcb.h>
 #include <tyndall/meta/typemap.h>
+#include <tyndall/meta/type_vals.h>
 #include <cstdio>
 #include <typeinfo>
+
+template<typename T>
+struct tstruct
+{
+  using Type = T;
+  //typedef T Type;
+  int i;
+  T a;
+  int ii;
+};
 
 int main()
 {
@@ -66,11 +77,11 @@ int main()
 
   static constexpr auto s = mux(s0, s1, s2);
 
-  iterate<s.size()>
-  ([](auto index){
-    constexpr auto v = s[index];
-    printf("s: %d %d %d %d %d %d %d\n", v.a, v.b, v.c, v.d, v.e, v.f, v.g);
-  });
+  //iterate<s.size()>
+  //([](auto index){
+  //  constexpr auto v = s[index];
+  //  printf("s: %d %d %d %d %d %d %d\n", v.a, v.b, v.c, v.d, v.e, v.f, v.g);
+  //});
 
 
   constexpr auto sv = "hei"_strval;
@@ -87,27 +98,61 @@ int main()
 
   struct TLs{ int a; float b;};
 
-  static constexpr auto tl =
-  typemap<TLs>{}
-  .join<int>(TLs{5,3})
-  .join<SS0>(TLs{4,2})
+  static constexpr auto tm =
+  typemap{}
+  .join<bool>()
+  .join<TLs>()
+  .join<SS0>()
   ;
 
-  if(tl.match_exec(
-    [](auto& arg, const TLs& match) -> bool
+  {
+    constexpr auto res = tm.get<1>();
+    printf("tm res: %s\n", typeid(res).name());
+  }
+
+  {
+    printf("type_vals:\n");
     {
-      return match.a == 4;
+      struct A{int a; float b;};
+      struct B{int a; float b;};
+      static constexpr auto col =
+      type_vals{}
+      .join<int>(5)
+      .join<A>(A{4,2})
+      .join<B>(B{3,9})
+      ;
+
+      constexpr auto res = col.get<2>();
+      printf("col res: %s\n", typeid(res).name());
     }
-    ,
-    [](auto& arg, const TLs& match)
+
     {
-      printf("match: %d, %f\n", match.a, match.b);
-      printf("type: %s\n", typeid(arg).name());
+      static constexpr auto c =
+      type_vals{}
+      .join<tstruct<int>>(tstruct<int>{5})
+      ;
+      constexpr auto res = c.get<0>();
+      printf("c res: %s\n", typeid(res).name());
+      //tstruct<int>::Type t;
+      decltype(res)::Type t;
     }
-  ) == 0)
-    printf("tls success\n");
-  else
-    printf("no tls match\n");
+  }
+
+  //if(tm.match_exec(
+  //  [](auto& arg, const TLs& match) -> bool
+  //  {
+  //    return match.a == 4;
+  //  }
+  //  ,
+  //  [](auto& arg, const TLs& match)
+  //  {
+  //    printf("match: %d, %f\n", match.a, match.b);
+  //    printf("type: %s\n", typeid(arg).name());
+  //  }
+  //) == 0)
+  //  printf("tls success\n");
+  //else
+  //  printf("no tls match\n");
 
   return 0;
 }

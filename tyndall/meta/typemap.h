@@ -4,38 +4,47 @@
   typemap provides a way to map types to arbitrary data
 */
 
-template<typename Data, typename... Types>
+template<typename... Types>
 class typemap
 {};
 
-template<typename Data, typename Type, typename... Tail>
-struct typemap<Data, Type, Tail...> : public typemap<Data, Tail...>
+template<typename Type, typename... Tail>
+struct typemap<Type, Tail...> : public typemap<Tail...>
 {
-  using type = Type;
-  Data data;
+  //using type = Type;
+  //Type data;
 
-  explicit constexpr typemap(typemap<Data, Tail...> tl, Data data) noexcept
-  : typemap<Data, Tail...>(tl)
-  , data(data)
+  //explicit constexpr typemap(typemap<Tail...> tl, Type data) noexcept
+  //: typemap<Tail...>(tl)
+  //, data(data)
+  //{}
+  explicit constexpr typemap() noexcept
+  : typemap<Tail...>()
   {}
 
+  //template<typename Entry>
+  //constexpr typemap<Entry, Type, Tail...> join(Entry entry) const noexcept
+  //{
+  //  return typemap<Entry, Type, Tail...>(*this, entry);
+  //}
   template<typename Entry>
-  constexpr typemap<Data, Entry, Type, Tail...> join(Data entry_data) const noexcept
+  static constexpr typemap<Entry, Type, Tail...> join() noexcept
   {
-    return typemap<Data, Entry, Type, Tail...>(*this, entry_data);
+    return typemap<Entry, Type, Tail...>();
   }
 
-  template<typename Match, typename Exec>
-  constexpr int match_exec(Match match, Exec exec) const noexcept
+  template<int index>
+  static constexpr std::enable_if_t<index == sizeof...(Tail),
+  Type> get() noexcept
   {
-    Type instance;
-    if (match(instance, data))
-    {
-      exec(instance, data);
-      return 0;
-    }
-    else
-      return typemap<Data, Tail...>::match_exec(match, exec);
+    return Type();
+  }
+
+  template<int index>
+  static constexpr std::enable_if_t<index < sizeof...(Tail),
+  decltype(typemap<Tail...>::template get<index>())> get() noexcept
+  {
+    return typemap<Tail...>::template get<index>();
   }
 
   //constexpr std::optional<Data> search(bool (*cond)(const Data&)) const noexcept
@@ -44,6 +53,19 @@ struct typemap<Data, Type, Tail...> : public typemap<Data, Tail...>
   //    return data;
   //  else
   //    return typemap<Data, Tail...>::search(cond);
+  //}
+
+  //template<typename Match, typename Exec>
+  //constexpr int match_exec(Match match, Exec exec) const noexcept
+  //{
+  //  Type instance;
+  //  if (match(instance, data))
+  //  {
+  //    exec(instance, data);
+  //    return 0;
+  //  }
+  //  else
+  //    return typemap<Data, Tail...>::match_exec(match, exec);
   //}
 
   //constexpr auto operator[](int index) const noexcept
@@ -62,23 +84,30 @@ struct typemap<Data, Type, Tail...> : public typemap<Data, Tail...>
 
 };
 
-template<typename Data>
-struct typemap<Data>
+template<>
+struct typemap<>
 {
   explicit constexpr typemap() noexcept
   {}
 
   template<typename Entry>
-  constexpr typemap<Data, Entry> join(Data entry_data) const noexcept
+  static constexpr typemap<Entry> join() noexcept
   {
-    return typemap<Data, Entry>(*this, entry_data);
+    return typemap<Entry>();
   }
 
-  template<typename Match, typename Exec>
-  constexpr int match_exec(Match match, Exec exec) const noexcept
+  template<int index>
+  static constexpr int get() noexcept
   {
-    return -1;
+    return 0;
   }
+
+
+  //template<typename Match, typename Exec>
+  //constexpr int match_exec(Match match, Exec exec) const noexcept
+  //{
+  //  return -1;
+  //}
 
   //constexpr std::optional<Data> search(bool (*cond)(const Data&)) const noexcept
   //{
