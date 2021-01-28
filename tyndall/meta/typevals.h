@@ -1,4 +1,5 @@
 #pragma once
+#include <type_traits>
 
 /*
   typevals is a container with entries that have different types
@@ -36,6 +37,12 @@ struct typevals<Type, Tail...> : public typevals<Tail...>
   decltype(typevals<Tail...>::template get_type<index>())> get() const noexcept
   {
     return typevals<Tail...>::template get<index>();
+  }
+
+  template<int index>
+  constexpr decltype(typevals<Type, Tail...>::template get_type<index>()) operator[](std::integral_constant<int, index>) const noexcept
+  {
+    return get<index>();
   }
 
   static constexpr int size() noexcept

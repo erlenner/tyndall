@@ -76,6 +76,7 @@ int main()
   constexpr value_vec<S2,5> s2{{6,7}};
 
   static constexpr auto s = mux(s0, s1, s2);
+  (void)sizeof(s);
 
   //iterate<s.size()>
   //([](auto index){
@@ -110,6 +111,8 @@ int main()
     printf("tm size: %d\n", tm.size());
     constexpr auto res = tm.get<1>();
     printf("tm res: %s\n", typeid(res).name());
+    constexpr auto res2 = tm[std::integral_constant<int, 1>()];
+    printf("tm res2: %s\n", typeid(res2).name());
   }
 
   {
@@ -127,6 +130,8 @@ int main()
 
       constexpr auto res = col.get<2>();
       printf("col res: %s\n", typeid(res).name());
+      constexpr auto res2 = col[std::integral_constant<int, 2>()];
+      printf("col res2: %s\n", typeid(res2).name());
     }
 
     {
@@ -138,6 +143,7 @@ int main()
       printf("c res: %s\n", typeid(res).name());
       //tstruct<int>::Type t;
       decltype(res)::Type t;
+      (void)sizeof(t);
     }
   }
 

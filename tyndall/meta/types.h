@@ -1,4 +1,5 @@
 #pragma once
+#include <type_traits>
 
 /*
   types is a list of types
@@ -39,6 +40,12 @@ struct types<Type, Tail...> : public types<Tail...>
   decltype(types<Tail...>::template get<index>())> get() noexcept
   {
     return types<Tail...>::template get<index>();
+  }
+
+  template<int index>
+  constexpr decltype(get<index>()) operator[](std::integral_constant<int, index>) const noexcept
+  {
+    return get<index>();
   }
 
   static constexpr int size() noexcept
