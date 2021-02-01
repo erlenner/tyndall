@@ -33,6 +33,12 @@ int main()
   log_debug("hei %d\n", 3); // printf format
   log_debug("hei {}\n", 4); // fmt format
 
+  {
+    FILE* fp = fopen("/tmp/asdlkjfslkdjalfjdslrdflkjnnnnnjkklsdjjjfdslkmnkl", "rb");
+    if (fp == NULL)
+      log_errno("couldn't open the file\n");
+  }
+
   signal(SIGINT, cb_sig);
 
 

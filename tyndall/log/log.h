@@ -63,6 +63,22 @@
 #define log_cat_once_info(...)    log_once(log_cat_info, __VA_ARGS__)
 #define log_cat_once_debug(...)   log_once(log_cat_debug, __VA_ARGS__)
 
+#define log_errno(fmt, ...) log_error("[" log_color_red log_color_bold "errno" log_color_reset ": " LOG_PATTERN_STR "] " fmt, strerror(errno) __VA_OPT__(,) __VA_ARGS__)
+
+
+// colors
+#define log_color_red     "\033[31m"
+#define log_color_green   "\033[32m"
+#define log_color_yellow  "\033[33m"
+#define log_color_blue    "\033[34m"
+#define log_color_magenta "\033[35m"
+#define log_color_cyan    "\033[36m"
+#define log_color_reset   "\033[0m"
+#define log_color_bold    "\033[1m"
+
+
+// implementation
+
 typedef enum { log_level_debug, log_level_info, log_level_warning, log_level_error } log_level_t;
 
 // struct for recording the origin of the log function call
@@ -144,6 +160,8 @@ extern "C"
     log_str_impl(str.c_str(), lvl, src_info); \
   } while(0)
 
+  #define LOG_PATTERN_STR "{}"
+
 #elif defined(LOG_PRINTF)
 
   #define log_format_impl(fmt, lvl, src_info, ...) do { \
@@ -151,6 +169,8 @@ extern "C"
     snprintf(buf, sizeof(buf), fmt __VA_OPT__(,) __VA_ARGS__); \
     log_str_impl(buf, lvl, src_info); \
   } while(0)
+
+  #define LOG_PATTERN_STR "%s"
 
 #else
   #error You need to specify either LOG_FMT or LOG_PRINTF
