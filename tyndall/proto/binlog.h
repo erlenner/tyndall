@@ -46,16 +46,26 @@ binlog_read(int fd, ProtoMessage& proto)
   }
   else
   {
-    static ::google::protobuf::io::FileInputStream stream(fd);
+    static ::google::protobuf::io::FileInputStream* stream = NULL;
+    static int fd_save = -1;
+    if (fd != fd_save)
+    {
+      fd_save = fd;
+      delete stream;
+      stream = new ::google::protobuf::io::FileInputStream(fd);
+    }
+
     bool clean_eof;
-    if (::google::protobuf::util::ParseDelimitedFromZeroCopyStream(&proto, &stream, &clean_eof))
+    if (::google::protobuf::util::ParseDelimitedFromZeroCopyStream(&proto, stream, &clean_eof))
       return 0;
     else
     {
+      delete stream;
+
       if (clean_eof)
         errno = EIO;
       else
-        errno = EPROTO;
+        errno = stream->GetErrno();
       return -1;
     }
   }
