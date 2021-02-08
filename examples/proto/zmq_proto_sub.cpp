@@ -1,4 +1,4 @@
-#include <tyndall/zmq_proto.h>
+#include <tyndall/proto/zmq_proto.h>
 #include <google/protobuf/wrappers.pb.h>
 #include <csignal>
 #include <thread>
@@ -23,8 +23,12 @@ int main()
   {
     google::protobuf::Int32Value msg;
 
-    int rc = zmq_proto::recv(msg, socket, "zmq_proto_ex");
-    assert(rc == 0);
+    int rc = zmq_proto::recv(msg, socket);
+    if (rc != 0)
+    {
+      printf("errno: %s\n", strerror(errno));
+      exit(1);
+    }
 
     printf("got value: %d\n", msg.value());
 

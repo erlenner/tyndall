@@ -1,4 +1,4 @@
-#include <tyndall/zmq_proto.h>
+#include <tyndall/proto/zmq_proto.h>
 #include <google/protobuf/wrappers.pb.h>
 #include <csignal>
 #include <thread>
@@ -26,8 +26,9 @@ int main()
 
     printf("sending value: %d\n", msg.value());
 
-    int rc = zmq_proto::send(msg, socket, "zmq_proto_ex");
-    assert(rc == 0);
+    int rc = zmq_proto::send(msg, socket);
+    if (rc != 0)
+      printf("errno: %s\n", strerror(errno));
 
     std::this_thread::sleep_for(std::chrono::milliseconds{3});
   }

@@ -1,8 +1,8 @@
 #pragma once
 #include <zmq.h>
 #include <google/protobuf/message.h>
-#include <google/protobuf/any.pb.h>
 #include <google/protobuf/empty.pb.h>
+#include <google/protobuf/wrappers.pb.h>
 
 #include <errno.h>
 #include <string.h>
@@ -175,67 +175,43 @@ public:
     int rc = zmq_msg_close(&msg);
     zmq_proto_assert(rc == 0);
   }
-
-  /*
-    checks for pattern at beginning of msg
-    return value: 0 if match, -1 if no match
-    errno: EBADMSG if no match
-  */
-  int match(const char* pattern, int pattern_length)
-  {
-    int rc;
-
-    if ((size() != pattern_length)
-      || (strncmp(data(), pattern, pattern_length) != 0))
-    {
-      rc = -1;
-      errno = EBADMSG;
-    }
-    else
-      rc = 0;
-
-    return rc;
-  }
-
-  template<int pattern_size>
-  int match(const char(&pattern)[pattern_size])
-  {
-    constexpr int pattern_length = pattern_size - 1;
-
-    return match(pattern, pattern_length);
-  }
-
-  int match(const char* pattern)
-  {
-    const int pattern_length = strlen(pattern);
-
-    return match(pattern, pattern_length);
-  }
 };
 
 // Send and receive functions for zeromq messages with protobuf payloads:
 
-// Message format consists of two frames.
-// First frame is a byte-array denoting endpoint-id / topic.
-// Second frame is a serialized protobuf::Any.
+// A message consists of two frames.
+// First frame is the type name of the protobuf
+// Second frame is a serialized protobuf.
 
-// send is used to send a message, or a frame
-// recv is used to receive the first, or all frames.
-// recv_more is used to receive the second frame, or all frames after the first frame.
+template<typename Message>
+std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
+check_proto_type(msg_t& msg)
+{
+  if (strcmp(msg.data(), Message().GetTypeName().c_str()) == 0)
+    return 0;
+  else
+  {
+    errno = EBADMSG;
+    return -1;
+  }
+}
 
 enum send_recv_flags { NONE = 0, DONTWAIT = ZMQ_DONTWAIT, SNDMORE = ZMQ_SNDMORE };
 
 /*
-  sends two-part message. first is id, second is proto packed in Any proto
+  sends two-part message. first is id, second is proto
   errno: EAGAIN if the outbound message queue was full
 */
-template<socket_type_t socket_type>
-int send(const google::protobuf::Any& payload, const socket_t<socket_type>& socket, const char *id, int id_len, send_recv_flags flags = NONE)
+template<socket_type_t socket_type, typename Message>
+std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
+send(const Message& payload, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
 {
   int rc;
 
+  std::string type_name = payload.GetTypeName();
+
   // first send id
-  const int sent = zmq_send(socket.zmq_handle(), id, id_len, static_cast<int>(flags | SNDMORE));
+  const int sent = zmq_send(socket.zmq_handle(), type_name.data(), type_name.size(), static_cast<int>(flags | SNDMORE));
   if (sent < 0)
   {
     zmq_proto_assert(zmq_errno() == EAGAIN);
@@ -262,29 +238,6 @@ int send(const google::protobuf::Any& payload, const socket_t<socket_type>& sock
   }
 
   return rc;
-}
-
-// runtime id helper
-template<socket_type_t socket_type, typename Message>
-std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
-send(const Message& msg, const socket_t<socket_type>& socket, const char *id, int id_len, send_recv_flags flags = NONE)
-{
-
-  google::protobuf::Any payload;
-  payload.PackFrom(msg);
-
-  return send(payload, socket, id, id_len, flags);
-}
-
-// compile time id helper
-template<socket_type_t socket_type, typename Message, int id_size>
-std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
-send(const Message& msg, const socket_t<socket_type>& socket, const char(&id)[id_size], send_recv_flags flags = NONE)
-{
-  // static id
-  constexpr int id_len = id_size - 1;
-
-  return send<socket_type, Message>(msg, socket, id, id_len, flags);
 }
 
 /*
@@ -357,12 +310,13 @@ int recv_more(const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
 }
 
 /*
-  receives another part of a multipart message, and parses into the Any proto
+  receives another part of a multipart message, and parses into the proto message
   errno: EOPNOTSUPP if there were no more message parts to receive
   errno: EPROTO if the proto could not be parsed
 */
-template<socket_type_t socket_type>
-int recv_more(google::protobuf::Any& any, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
+template<socket_type_t socket_type, typename Message>
+std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
+recv_more(Message& proto_msg, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
 {
   msg_t msg;
 
@@ -370,7 +324,7 @@ int recv_more(google::protobuf::Any& any, const socket_t<socket_type>& socket, s
 
   if (rc != 0)
     rc = -1;
-  else if (!any.ParseFromArray(msg.data(), msg.size()))
+  else if (!proto_msg.ParseFromArray(msg.data(), msg.size()))
   {
     rc = -1;
     errno = EPROTO;
@@ -382,53 +336,21 @@ int recv_more(google::protobuf::Any& any, const socket_t<socket_type>& socket, s
 }
 
 /*
-  receives another part of a multipart message, and parses into proto
-  errno: EOPNOTSUPP if there were no more message parts to receive
-  errno: EPROTO if the proto could not be parsed
-  errno: EBADMSG if the proto was of the wrong type
-*/
-template<socket_type_t socket_type, typename Message>
-std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
-recv_more(Message& proto_msg, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
-{
-  google::protobuf::Any any;
-
-  int rc = recv_more(any, socket, flags);
-
-  if (rc != 0)
-    rc = -1;
-  else if (!any.Is<Message>())
-  {
-    rc = -1;
-    errno = ENOMSG;
-  }
-  else
-  {
-    rc = 0;
-    bool unpack_rc = any.UnpackTo(&proto_msg);
-    zmq_proto_assert(unpack_rc);
-  }
-
-  return rc;
-}
-
-/*
   receives two parts of a multipart message. Matches first with id and parses second into proto
   errno: EAGAIN if the inbound message queue was empty
   errno: EBADMSG if the id didn't match
   errno: EOPNOTSUPP if there were no more message parts to receive after first part
-  errno: EPROTO if the proto could not be parsed
-  errno: EBADMSG if the proto was of the wrong type
+  errno: EPROTO if the proto could not be parsed / did not match
 */
-template<socket_type_t socket_type, typename Message, int id_size>
+template<socket_type_t socket_type, typename Message>
 std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
-recv(Message& proto_msg, const socket_t<socket_type>& socket, const char(&id)[id_size], send_recv_flags flags = NONE)
+recv(Message& proto_msg, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
 {
   msg_t id_msg;
 
   int rc;
   (0 == (rc = recv(id_msg, socket, flags)))
-    && (0 == (rc = id_msg.match(id)))
+    && (0 == (rc = check_proto_type<Message>(id_msg)))
     && (0 == (rc = recv_more(proto_msg, socket, flags)));
 
   return rc;
