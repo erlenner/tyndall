@@ -1,6 +1,7 @@
 #pragma once
 
-// compile time string which obeys "str"_strval == "str"_strval
+// compile time string which ensures "string A"_strval and "string A"_strval have the same type,
+// while "string A"_strval and "string B"_strval have different types
 
 template<char... Args>
 struct strval
