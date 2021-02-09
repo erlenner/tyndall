@@ -177,17 +177,14 @@ public:
   }
 };
 
-// Send and receive functions for zeromq messages with protobuf payloads:
-
-// A message consists of two frames.
-// First frame is the type name of the protobuf
-// Second frame is a serialized protobuf.
+// helpers:
 
 template<typename Message>
 std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
 check_proto_type(msg_t& msg)
 {
-  if (strcmp(msg.data(), Message().GetTypeName().c_str()) == 0)
+  std::string type_name = Message{}.GetTypeName();
+  if (strncmp(msg.data(), type_name.data(), type_name.size()) == 0)
     return 0;
   else
   {
@@ -196,10 +193,24 @@ check_proto_type(msg_t& msg)
   }
 }
 
+template<typename Message>
+std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, const char*>
+get_debug_string(const Message& proto)
+{
+  static const std::string debug_string = proto.GetTypeName() + " { " + proto.ShortDebugString() + " }";
+  return debug_string.c_str();
+}
+
+// Send and receive functions for zeromq messages with protobuf payloads:
+
+// A message consists of two frames.
+// First frame is the type name of the protobuf
+// Second frame is a serialized protobuf.
+
 enum send_recv_flags { NONE = 0, DONTWAIT = ZMQ_DONTWAIT, SNDMORE = ZMQ_SNDMORE };
 
 /*
-  sends two-part message. first is id, second is proto
+  sends two-part message. first is type name, second is proto
   errno: EAGAIN if the outbound message queue was full
 */
 template<socket_type_t socket_type, typename Message>
@@ -210,7 +221,7 @@ send(const Message& payload, const socket_t<socket_type>& socket, send_recv_flag
 
   std::string type_name = payload.GetTypeName();
 
-  // first send id
+  // first send type name
   const int sent = zmq_send(socket.zmq_handle(), type_name.data(), type_name.size(), static_cast<int>(flags | SNDMORE));
   if (sent < 0)
   {
@@ -336,9 +347,9 @@ recv_more(Message& proto_msg, const socket_t<socket_type>& socket, send_recv_fla
 }
 
 /*
-  receives two parts of a multipart message. Matches first with id and parses second into proto
+  receives two parts of a multipart message. Matches first with type name and parses second into proto
   errno: EAGAIN if the inbound message queue was empty
-  errno: EBADMSG if the id didn't match
+  errno: EBADMSG if the type name didn't match
   errno: EOPNOTSUPP if there were no more message parts to receive after first part
   errno: EPROTO if the proto could not be parsed / did not match
 */
@@ -346,11 +357,11 @@ template<socket_type_t socket_type, typename Message>
 std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
 recv(Message& proto_msg, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
 {
-  msg_t id_msg;
+  msg_t type_name_msg;
 
   int rc;
-  (0 == (rc = recv(id_msg, socket, flags)))
-    && (0 == (rc = check_proto_type<Message>(id_msg)))
+  (0 == (rc = recv(type_name_msg, socket, flags)))
+    && (0 == (rc = check_proto_type<Message>(type_name_msg)))
     && (0 == (rc = recv_more(proto_msg, socket, flags)));
 
   return rc;
