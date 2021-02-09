@@ -145,6 +145,20 @@ int main()
       decltype(res)::Type t;
       (void)sizeof(t);
     }
+
+    {
+      static constexpr auto c =
+      typevals{}
+      + tstruct<int>{-5}
+      + tstruct<float>{3}
+      + tstruct<unsigned>{8}
+      ;
+
+      iterate<c.size()>
+      ([](auto index){
+        printf("index: %d\n", index());
+      });
+    }
   }
 
   //if(tm.match_exec(
