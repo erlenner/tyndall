@@ -19,7 +19,7 @@ if ("${roscpp_FOUND}")
 
   include_directories(${roscpp_INCLUDE_DIRS})
   link_directories(${roscpp_LINK_DIRECTORIES})
-  set(LD_FLAGS "${LD_FLAGS} ${roscpp_LIBRARIES}")
+  set(LD_FLAGS "${LD_FLAGS} -lpthread -lroscpp -lrosconsole -lrosconsole_backend_interface -lrosconsole_log4cxx -lroscpp_serialization -lxmlrpcpp -lrostime -lcpp_common")
 else()
   add_definitions("-DNO_ROS")
 endif()
@@ -34,6 +34,12 @@ foreach(HEADER ${HEADERS})
   execute_process(COMMAND bash "-c" "dirname -z $(realpath --relative-to=${CMAKE_SOURCE_DIR} ${HEADER})" OUTPUT_VARIABLE HEADER_DIR)
   install(FILES ${HEADER} DESTINATION include/${HEADER_DIR})
 endforeach(HEADER)
+
+execute_process(COMMAND bash "-c" "echo -n \"${roscpp_LINK_DIRECTORIES}\" | sed -n -e 's/^.*\\(\\/opt\\)/\\1/p'" OUTPUT_VARIABLE PKGCONF_ROS_LIBLINK_PATH)
+set(PKGCONF_ROS_LIBLINK "-L${PKGCONF_ROS_LIBLINK_PATH}")
+set(PKGCONF_LD_FLAGS ${LD_FLAGS})
+configure_file(tyndall.pc.in tyndall.pc @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/tyndall.pc DESTINATION lib/pkgconfig)
 
 set(EXAMPLE_PREFIX "${CMAKE_PROJECT_NAME}_ex_")
 
