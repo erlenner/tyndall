@@ -114,7 +114,7 @@ extern "C"
 #define log_impl(fmt, lvl, category, ...) \
 do { \
   static bool init = true; \
-  static log_src_info_t src_info; \
+  static log_src_info_t src_info = {0}; \
   if (init) \
   { \
     const char *cat = (const char*)((category && strlen(category)) ? category : __FUNCTION__); \
