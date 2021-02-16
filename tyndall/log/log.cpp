@@ -57,7 +57,7 @@ struct logger_t
 };
 
 // initializes loggers on first call
-const logger_t& spdlog_get_loggers(const char *pattern = NULL, const char* file_path = NULL, bool* was_first_run = NULL)
+const logger_t& spdlog_get_loggers(const log_init_params& params = {0}, bool* was_first_run = NULL)
 {
   static logger_t loggers;
 
@@ -71,20 +71,24 @@ const logger_t& spdlog_get_loggers(const char *pattern = NULL, const char* file_
     stdout_logger->flush_on(spdlog::level::err);
     loggers.stdout_logger = std::move(stdout_logger);
 
-    if ((file_path != NULL) && (strlen(file_path) > 0))
+    if ((params.file_path != NULL) && (strlen(params.file_path) > 0))
     {
-      auto file_logger = spdlog::basic_logger_mt("file", file_path);
+      auto file_logger = spdlog::basic_logger_mt("file", params.file_path);
       file_logger->set_level(spdlog::level::trace);
       file_logger->flush_on(spdlog::level::err);
       //spdlog::register_logger(file_logger);
       loggers.file_logger = std::move(file_logger);
     }
 
+    //spdlog::details::registry::instance().apply_all( [] (auto logger) {
+    //  printf("NAME: %s\n", logger->name().c_str());
+    //});
+
     spdlog::set_level(spdlog::level::trace);
     spdlog::flush_every(std::chrono::seconds(1));
 
-    if (pattern != NULL)
-      spdlog::set_pattern(pattern);
+    if (params.pattern != NULL)
+      spdlog::set_pattern(params.pattern);
     else
       spdlog::set_pattern(SPDLOG_DEFAULT_PATTERN);
 
@@ -100,12 +104,12 @@ const logger_t& spdlog_get_loggers(const char *pattern = NULL, const char* file_
   return loggers;
 }
 
-void log_init_impl(const char *pattern, const char *file_path)
+void log_init_impl(log_init_params params)
 {
   bool did_init_loggers;
-  spdlog_get_loggers(pattern, file_path, &did_init_loggers);
+  spdlog_get_loggers(params, &did_init_loggers);
 
-  assert(did_init_loggers); // log_init wont work if the loggers were already initialized implicitly by log_str
+  assert(did_init_loggers && "log_init needs to run before first log statement!"); // log_init wont work if the loggers were already initialized implicitly by log_str
 }
 
 void log_str_impl(const char* str, log_level_t lvl, log_src_info_t* src_info)

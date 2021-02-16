@@ -28,7 +28,8 @@ std::ostream& operator<<(std::ostream& os, const S& rhs)
 
 int main()
 {
-  log_init(NULL, "out.log");
+
+  log_init({.file_path = "out.log"});
 
   log_debug("hei %d\n", 3); // printf format
   log_debug("hei {}\n", 4); // fmt format
