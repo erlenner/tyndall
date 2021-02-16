@@ -85,7 +85,9 @@ const logger_t& spdlog_get_loggers(const log_init_params& params = {0}, bool* wa
     //});
 
     spdlog::set_level(spdlog::level::trace);
-    spdlog::flush_every(std::chrono::seconds(1));
+
+    if (params.flush_every_sec != 0)
+      spdlog::flush_every(std::chrono::seconds{params.flush_every_sec});
 
     if (params.pattern != NULL)
       spdlog::set_pattern(params.pattern);

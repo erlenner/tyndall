@@ -36,9 +36,10 @@
 typedef struct
 {
   const char* pattern; // follows spdlog set_pattern style: https://github.com/gabime/spdlog/wiki/3.-Custom-formatting
-  const char* file_path; // path to log output file. Will append.
+  const char* file_path; // path to log output file. Will append to file.
+  long flush_every_sec; // seconds between each manual fflush. 0 means no manual flush.
 } log_init_params;
-#define log_init(params) log_init_impl(params)
+#define log_init log_init_impl
 #define log_str log_str_impl
 #define log_level log_level_impl
 
