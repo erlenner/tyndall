@@ -68,17 +68,20 @@ const logger_t& spdlog_get_loggers(const char *pattern = NULL, const char* file_
     //spdlog::register_logger(stdout_logger);
     //spdlog::set_default_logger(stdout_logger);
     stdout_logger->set_level(spdlog::level::trace);
+    stdout_logger->flush_on(spdlog::level::err);
     loggers.stdout_logger = std::move(stdout_logger);
 
     if ((file_path != NULL) && (strlen(file_path) > 0))
     {
       auto file_logger = spdlog::basic_logger_mt("file", file_path);
       file_logger->set_level(spdlog::level::trace);
+      file_logger->flush_on(spdlog::level::err);
       //spdlog::register_logger(file_logger);
       loggers.file_logger = std::move(file_logger);
     }
 
     spdlog::set_level(spdlog::level::trace);
+    spdlog::flush_every(std::chrono::seconds(1));
 
     if (pattern != NULL)
       spdlog::set_pattern(pattern);
