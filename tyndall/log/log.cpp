@@ -1,4 +1,5 @@
-#include <stdint.h>
+#include <cstdint>
+#include <atomic>
 
 #define SPDLOG_FMT_EXTERNAL
 #define SPDLOG_EOL ""
@@ -57,56 +58,67 @@ struct logger_t
 };
 
 // initializes loggers on first call
-const logger_t& spdlog_get_loggers(const log_init_params& params = {0}, bool* was_first_run = NULL)
+const logger_t& spdlog_get_loggers(const log_init_params_t& params = {0}, bool* was_first_run = NULL)
 {
   static logger_t loggers;
+  static std::mutex init_mutex;
 
-  static bool first_run = true;
-  if (first_run)
+  // double checked locking
+  static std::atomic_bool first_run = true;
+  static std::mutex mu;
+
+  const bool check1 = first_run.load(std::memory_order_relaxed);
+  std::atomic_thread_fence(std::memory_order_acquire);
+  if (check1)
   {
-    auto stdout_logger = spdlog::stdout_color_mt("stdout");
-    //spdlog::register_logger(stdout_logger);
-    //spdlog::set_default_logger(stdout_logger);
-    stdout_logger->set_level(spdlog::level::trace);
-    stdout_logger->flush_on(spdlog::level::err);
-    loggers.stdout_logger = std::move(stdout_logger);
-
-    if ((params.file_path != NULL) && (strlen(params.file_path) > 0))
+    std::lock_guard<std::mutex> lock(mu);
+    const bool check2 = first_run.load(std::memory_order_relaxed);
+    if (check2)
     {
-      auto file_logger = spdlog::basic_logger_mt("file", params.file_path);
-      file_logger->set_level(spdlog::level::trace);
-      file_logger->flush_on(spdlog::level::err);
-      //spdlog::register_logger(file_logger);
-      loggers.file_logger = std::move(file_logger);
+      auto stdout_logger = spdlog::stdout_color_mt("stdout");
+      //spdlog::register_logger(stdout_logger);
+      //spdlog::set_default_logger(stdout_logger);
+      stdout_logger->set_level(spdlog::level::trace);
+      stdout_logger->flush_on(spdlog::level::err);
+      loggers.stdout_logger = std::move(stdout_logger);
+
+      if ((params.file_path != NULL) && (strlen(params.file_path) > 0))
+      {
+        auto file_logger = spdlog::basic_logger_mt("file", params.file_path);
+        file_logger->set_level(spdlog::level::trace);
+        file_logger->flush_on(spdlog::level::err);
+        //spdlog::register_logger(file_logger);
+        loggers.file_logger = std::move(file_logger);
+      }
+
+      //spdlog::details::registry::instance().apply_all( [] (auto logger) {
+      //  printf("NAME: %s\n", logger->name().c_str());
+      //});
+
+      spdlog::set_level(spdlog::level::trace);
+
+      if (params.flush_every_seconds != 0)
+        spdlog::flush_every(std::chrono::seconds{params.flush_every_seconds});
+
+      if (params.pattern != NULL)
+        spdlog::set_pattern(params.pattern);
+      else
+        spdlog::set_pattern(SPDLOG_DEFAULT_PATTERN);
+
+      if (was_first_run != NULL)
+        *was_first_run = true;
+
+      std::atomic_thread_fence(std::memory_order_release);
+      first_run.store(false, std::memory_order_relaxed);
     }
-
-    //spdlog::details::registry::instance().apply_all( [] (auto logger) {
-    //  printf("NAME: %s\n", logger->name().c_str());
-    //});
-
-    spdlog::set_level(spdlog::level::trace);
-
-    if (params.flush_every_sec != 0)
-      spdlog::flush_every(std::chrono::seconds{params.flush_every_sec});
-
-    if (params.pattern != NULL)
-      spdlog::set_pattern(params.pattern);
-    else
-      spdlog::set_pattern(SPDLOG_DEFAULT_PATTERN);
-
-    first_run = false;
-
-    if (was_first_run != NULL)
-      *was_first_run = true;
   }
-  else
-    if (was_first_run != NULL)
-      *was_first_run = false;
+  else if (was_first_run != NULL)
+    *was_first_run = false;
 
   return loggers;
 }
 
-void log_init_impl(log_init_params params)
+void log_init_impl(log_init_params_t params)
 {
   bool did_init_loggers;
   spdlog_get_loggers(params, &did_init_loggers);

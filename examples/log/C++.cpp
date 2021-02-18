@@ -4,6 +4,7 @@
 
 #include <unistd.h>
 #include <signal.h>
+#include <thread>
 
 sig_atomic_t run = 1;
 
@@ -29,8 +30,11 @@ std::ostream& operator<<(std::ostream& os, const S& rhs)
 int main()
 {
 
-  log_init({.file_path = "out.log"});
+  //log_init({.file_path = "out.log"});
 
+  //std::thread t([](){ log_init({.file_path = "out.log"}); });
+
+  std::thread t([](){ log_debug("hei from thread\n"); });
   log_debug("hei %d\n", 3); // printf format
   log_debug("hei {}\n", 4); // fmt format
 
