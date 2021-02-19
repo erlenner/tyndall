@@ -38,6 +38,8 @@ int main()
   log_debug("hei %d\n", 3); // printf format
   log_debug("hei {}\n", 4); // fmt format
 
+  log_flushed_info("flushed\n");
+
   {
     FILE* fp = fopen("/tmp/asdlkjfslkdjalfjdslrdflkjnnnnnjkklsdjjjfdslkmnkl", "rb");
     if (fp == NULL)

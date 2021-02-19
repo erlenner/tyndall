@@ -141,6 +141,16 @@ void log_str_impl(const char* str, log_level_t lvl, log_src_info_t* src_info)
     loggers.file_logger->log(spdlog_src_info, spdlog_lvl, str);
 }
 
+void log_flush_impl()
+{
+  static auto loggers = spdlog_get_loggers();
+
+  loggers.stdout_logger->flush();
+
+  if (loggers.file_logger)
+    loggers.file_logger->flush();
+}
+
 
 log_level_t log_level(const char* cat)
 {

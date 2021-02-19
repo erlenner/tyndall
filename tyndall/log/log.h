@@ -41,6 +41,7 @@ typedef struct
 } log_init_params_t;
 #define log_init log_init_impl
 #define log_str log_str_impl
+#define log_flush log_flush_impl
 #define log_level log_level_impl
 
 #define log_once(log_func, ...) do{ \
@@ -63,6 +64,11 @@ typedef struct
 #define log_cat_once_debug(...)   log_once(log_cat_debug, __VA_ARGS__)
 
 #define log_errno(fmt, ...) log_error("[" log_color_red log_color_bold "errno" log_color_reset ": " LOG_PATTERN_STR "] " fmt, strerror(errno) __VA_OPT__(,) __VA_ARGS__)
+
+#define log_flushed_error(...) do{ log_error(__VA_ARGS__); log_flush(); } while(0)
+#define log_flushed_warning(...) do{ log_warning(__VA_ARGS__); log_flush(); } while(0)
+#define log_flushed_info(...) do{ log_info(__VA_ARGS__); log_flush(); } while(0)
+#define log_flushed_debug(...) do{ log_debug(__VA_ARGS__); log_flush(); } while(0)
 
 
 // colors
@@ -143,6 +149,8 @@ extern "C"
   void log_init_impl(log_init_params_t params);
 
   void log_str_impl(const char* str, log_level_t lvl, log_src_info_t* src_info);
+
+  void log_flush_impl();
 #ifdef __cplusplus
 } // extern "C"
 #endif
