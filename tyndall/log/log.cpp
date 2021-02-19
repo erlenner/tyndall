@@ -14,7 +14,7 @@
 #define LOG_PATH ""
 #include "log.h"
 
-#define SPDLOG_DEFAULT_PATTERN "[%^%l%$: %s:%# (%!) %H:%M:%S.%e] %v" // https://spdlog.docsforge.com/v1.x/3.custom-formatting/#pattern-flags
+#define SPDLOG_DEFAULT_PATTERN "[%H:%M:%S.%e %^%l%$ %s:%# (%!)] %v" // https://spdlog.docsforge.com/v1.x/3.custom-formatting/#pattern-flags
 
 #define SPDLOG_DEFAULT_LEVEL spdlog::level::info
 
