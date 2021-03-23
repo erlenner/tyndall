@@ -18,19 +18,18 @@ void signal_handler(int sig)
 
 int main(int argc, char** argv)
 {
-  ros_context::init(argc, argv, std::chrono::milliseconds{3}, "ex_ros_context");
+  ros_context::init(argc, argv, std::chrono::milliseconds{3}, "ex_ros_context_read");
 
   signal(SIGINT, signal_handler);
 
-  for(int i=0; run; ++i)
+  while(run)
   {
     std_msgs::Int32 msg;
-    msg.data = i;
-
-    printf("sending: %d\n", msg.data);
 
 
-    ros_context_write(msg, "/ex_ros_context");
+    ros_context_read(msg, "/ex_ros_context");
+
+    printf("read: %d\n", msg.data);
 
     std::this_thread::sleep_for(std::chrono::milliseconds{3});
   }
