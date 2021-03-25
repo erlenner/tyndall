@@ -75,6 +75,7 @@ namespace ros_context
     static Message save;
     static std::mutex save_mutex;
     static bool new_save = false;
+    static bool valid_save = false;
 
     // register ros callback
     static bool must_initialize_callback = true;
@@ -90,6 +91,7 @@ namespace ros_context
             std::lock_guard<typeof(save_mutex)> guard(save_mutex);
             save = *sub_msg;
             new_save = true;
+            valid_save = true;
           })
         );
     }
@@ -97,44 +99,24 @@ namespace ros_context
     // get saved ros message
     int rc;
     {
-      static bool wait_for_save = true;
-      static const auto wait_for_save_since = std::chrono::system_clock::now();
-      constexpr std::chrono::milliseconds max_wait_time{1000};
-      do
+      std::lock_guard<typeof(save_mutex)> guard(save_mutex);
+      if (new_save)
       {
-        std::lock_guard<typeof(save_mutex)> guard(save_mutex);
-        if (new_save)
-        {
-          new_save = false;
-          msg = save;
-          rc = 0;
-        }
-        else
-        {
-          msg = save;
-          rc = -1;
-          errno = EAGAIN;
-        }
-      } while (
-        // wait for first ros message
-        wait_for_save
-        &&
-        (
-          (
-            (rc != 0)
-            && (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - wait_for_save_since) < max_wait_time)
-            && ({ std::this_thread::sleep_for(std::chrono::milliseconds{20}); true; })
-          )
-          ||
-          ({
-            if (rc == 0)
-              wait_for_save = false;
-            else
-              errno = ENOMSG;
-            false;
-          })
-        )
-      );
+        new_save = false;
+        msg = save;
+        rc = 0;
+      }
+      else if (valid_save)
+      {
+        msg = save;
+        rc = -1;
+        errno = EAGAIN;
+      }
+      else
+      {
+        rc = -1;
+        errno = ENOMSG;
+      }
     }
 
     return rc;
