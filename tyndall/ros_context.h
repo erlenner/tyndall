@@ -85,11 +85,11 @@ namespace ros_context
       std::lock_guard<typeof(ros_mutex)> guard(ros_mutex);
 
       static auto sub = nh->subscribe<Message>(Id::c_str(), 1,
-        boost::function<void(const boost::shared_ptr<const Message>&)>
-        ([](const boost::shared_ptr<const Message>& sub_msg)
+        boost::function<void(const Message&)>
+        ([](const Message& sub_msg)
         -> void {
             std::lock_guard<typeof(save_mutex)> guard(save_mutex);
-            save = *sub_msg;
+            save = sub_msg;
             new_save = true;
             valid_save = true;
           })
