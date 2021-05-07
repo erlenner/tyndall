@@ -2,6 +2,7 @@
 #include <google/protobuf/wrappers.pb.h>
 #include <thread>
 #include <cstdio>
+#include <csignal>
 
 sig_atomic_t run = 1;
 

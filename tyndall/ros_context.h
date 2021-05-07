@@ -16,6 +16,8 @@ namespace ros_context
 }
 #define ros_context_read(msg, ...) do { (void)sizeof(msg); } while(0)
 #define ros_context_write(msg, ...) do { (void)sizeof(msg); } while(0)
+#define ros_context_serve(msg, ...) do { (void)sizeof(msg); } while(0)
+#define ros_context_call(msg, ...) do { (void)sizeof(msg); } while(0)
 #else
 #include <ros/ros.h>
 
