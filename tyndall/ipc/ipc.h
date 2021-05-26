@@ -19,11 +19,11 @@ using ipc_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ, ipc_shmem_prefix>;
 #define ipc_write(entry, id) ipc_static_write(entry, id ## _strval)
 
 template<typename STORAGE, typename Id>
-int ipc_static_write(const STORAGE& entry, Id)
+void ipc_static_write(const STORAGE& entry, Id)
 {
   static ipc_writer<STORAGE> writer(Id::c_str());
 
-  return writer.write(entry);
+  writer.write(entry);
 }
 
 template<typename STORAGE, typename Id>

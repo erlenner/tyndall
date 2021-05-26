@@ -104,10 +104,10 @@ public:
     shmem_unmap((void*)ds, sizeof(DATA_STRUCTURE));
   }
 
-  int write(const storage& entry)
+  void write(const storage& entry)
   {
     static_assert(PERMISSIONS & SHMEM_WRITE, "not a writer");
-    return ds->write(entry, data);
+    ds->write(entry, data);
   }
 
   int read(storage& entry)

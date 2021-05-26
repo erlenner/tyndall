@@ -16,74 +16,6 @@ https://github.com/rigtorp/Seqlock
 #include "smp.h"
 
 
-#define seq_lock_def(STORAGE)\
-typedef struct                                                              \
-{                                                                           \
-  int seq;                                                                  \
-  STORAGE entry;                                                            \
-} __attribute__ ((aligned(CACHELINE_BYTES)))
-
-#define seq_lock_init(lock)                                    \
-do {                                                            \
-  memset(lock, 0, sizeof(lock));                              \
-} while (0)
-
-/*
-parameters:
-_lock (in): pointer to object defined by seq_lock_def
-_entry (in): instance of STORAGE object passed to seq_lock_def
-*/
-#define seq_lock_write(_lock, _entry)                                              \
-do {                                                                                \
-  typeof(_lock) const q = _lock;                                                  \
-                                                                                    \
-  int seq = (q)->seq;                                                               \
-                                                                                    \
-  smp_write_once((q)->seq, ++seq);                                                  \
-  smp_wmb();                                                                        \
-  (q)->entry = _entry;                                                              \
-  smp_wmb();                                                                        \
-  smp_write_once((q)->seq, ++seq);                                                  \
-                                                                                    \
-} while(0)
-
-/*
-parameters:
-_lock (in): pointer to object defined by seq_lock_def
-_entry (out): instance of STORAGE object passed to seq_lock_def
-_seq2 (out, optional): sequence number of the read entry
-*/
-#define seq_lock_read(_lock, _entry, .../*_seq2*/)                                  \
-do {                                                                                \
-  typeof(_lock) const q = _lock;                                                    \
-                                                                                    \
-  int seq1 = smp_read_once((q)->seq);                                               \
-                                                                                    \
-  while(1)                                                                          \
-  {                                                                                 \
-    if (seq1 & 1)                                                                   \
-    {                                                                               \
-      cpu_relax();                                                                  \
-      seq1 = smp_read_once((q)->seq);                                               \
-      continue;                                                                     \
-    }                                                                               \
-                                                                                    \
-    smp_rmb();                                                                      \
-    _entry = (q)->entry;                                                            \
-    smp_rmb();                                                                      \
-                                                                                    \
-    int seq2 = smp_read_once((q)->seq);                                             \
-    if (seq2 == seq1)                                                               \
-    {                                                                               \
-      __VA_ARGS__ __VA_OPT__(= seq2;) /* only set seq2 if present*/                 \
-      break;                                                                        \
-    }                                                                               \
-                                                                                    \
-    seq1 = seq2;                                                                    \
-  }                                                                                 \
-                                                                                    \
-} while(0)
-
 #ifdef __cplusplus
 
 
@@ -102,27 +34,47 @@ class seq_lock
   STORAGE entry;
 
 public:
-  int write(const STORAGE& entry, seq_lock_data data = {0})
+  void write(const STORAGE& entry, seq_lock_data data = {0})
   {
-    seq_lock_write(this, entry);
-    return 0;
+    int seq = this->seq;
+
+    smp_write_once(this->seq, ++seq);
+    smp_wmb();
+
+    this->entry = entry;
+
+    smp_wmb();
+    smp_write_once(this->seq, ++seq);
   }
 
   int read(STORAGE& entry, seq_lock_data& data)
   {
-    int seq, ret;
-    seq_lock_read(this, entry, seq);
-    ret = (seq == data.last_seq);
-    data.last_seq = seq;
-    return ret;
-  }
+    int seq1, seq2, ret;
 
-  // NOTE: This returns the sequence number
-  int read(STORAGE& entry)
-  {
-    int seq;
-    seq_lock_read(this, entry, seq);
-    return seq;
+    seq1 = smp_read_once(this->seq);
+    while(1)
+    {
+      if (seq1 & 1)
+      {
+        cpu_relax();
+        seq1 = smp_read_once(this->seq);
+        continue;
+      }
+
+      smp_rmb();
+      entry = this->entry;
+      smp_rmb();
+
+      seq2 = smp_read_once(this->seq);
+      if (seq2 == seq1)
+        break;
+
+      seq1 = seq2;
+    }
+
+    ret = (seq2 != data.last_seq) ? 0 : -1;
+    data.last_seq = seq2;
+    return ret;
   }
 
   typedef STORAGE storage;
