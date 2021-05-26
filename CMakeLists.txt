@@ -7,7 +7,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall")
 
 include_directories(${CMAKE_SOURCE_DIR})
-set(LD_FLAGS "-lpthread -lzmq -lprotobuf -lfmt")
+set(LD_FLAGS "-lpthread -lzmq -lprotobuf -lfmt -lrt")
 
 find_package(roscpp)
 
