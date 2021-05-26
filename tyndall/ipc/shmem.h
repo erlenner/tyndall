@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <string.h>
+#include <tyndall/meta/strval.h>
 
 enum shmem_error
 {
@@ -72,8 +73,7 @@ enum shmem_permission
   SHMEM_READ = 1<<0,
   SHMEM_WRITE = 1<<1,
 };
-constexpr char shmem_default_prefix[] = "shmem";
-template<typename DATA_STRUCTURE, int PERMISSIONS, const char* PREFIX = shmem_default_prefix>
+template<typename DATA_STRUCTURE, int PERMISSIONS, typename PREFIX = strval_t("shmem")>
 class shmem_data
 {
   DATA_STRUCTURE *ds;
@@ -91,8 +91,8 @@ public:
 
   int init(const char *id)
   {
-    char handle[strlen(PREFIX) + 1 + strlen(id) + 1];
-    sprintf(handle, "%s_%s", PREFIX, id);
+    char handle[PREFIX::size() + 1 + strlen(id) + 1];
+    sprintf(handle, "%s_%s", PREFIX::c_str(), id);
 
     int rc = shmem_create((void**)&ds, handle, sizeof(DATA_STRUCTURE));
 

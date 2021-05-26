@@ -1,17 +1,20 @@
 #pragma once
 #include "shmem.h"
+#include <tyndall/meta/strval.h>
 
-//                                    echo ipc | sha1sum
-const char ipc_shmem_prefix[] = "ipc" "1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7";
+#ifndef IPC_SHMEM_PREFIX
+//                              echo ipc | sha1sum
+#define IPC_SHMEM_PREFIX "ipc" "1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7"
+#endif
 
 #ifdef __cplusplus
 
 #include "seq_lock.h"
 
 template<typename STORAGE>
-using ipc_writer = shmem_data<seq_lock<STORAGE>, SHMEM_WRITE, ipc_shmem_prefix>;
+using ipc_writer = shmem_data<seq_lock<STORAGE>, SHMEM_WRITE, strval_t(IPC_SHMEM_PREFIX)>;
 template<typename STORAGE>
-using ipc_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ, ipc_shmem_prefix>;
+using ipc_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ, strval_t(IPC_SHMEM_PREFIX)>;
 
 
 #include <tyndall/meta/strval.h>
@@ -38,5 +41,5 @@ int ipc_static_read(STORAGE& entry, Id)
 
 int ipc_cleanup()
 {
-  return shmem_unlink_all(ipc_shmem_prefix);
+  return shmem_unlink_all(IPC_SHMEM_PREFIX);
 }

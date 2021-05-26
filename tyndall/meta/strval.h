@@ -16,6 +16,11 @@ struct strval
   {
     return (const char[]){ Args..., '\0'};
   }
+
+  static constexpr int size() noexcept
+  {
+    return sizeof... (Args);
+  }
 };
 
 template<typename Char, Char... Args>
@@ -23,6 +28,9 @@ constexpr strval<Args...> operator""_strval() noexcept
 {
   return {};
 }
+
+#include <tyndall/meta/macro.h>
+#define strval_t(str) typeof(M_CAT(str, _strval))
 
 //#include <ostream>
 //template<char... Args>
