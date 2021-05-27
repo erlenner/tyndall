@@ -64,3 +64,13 @@ endforeach(EXAMPLE)
 
 add_custom_target(examples)
 add_dependencies(examples ${EXAMPLE_TARGETS})
+
+
+find_package(Python COMPONENTS Interpreter Development REQUIRED)
+find_package(PythonLibs 3 REQUIRED)
+find_package(Boost COMPONENTS python REQUIRED)
+python_add_module(pytyndall py/py.cpp)
+include_directories(${Boost_INCLUDE_DIRS} ${Python_INCLUDE_DIRS})
+target_link_libraries(pytyndall tyndall ${LD_FLAGS} ${Boost_LIBRARIES} ${Python_LIBRARIES})
+execute_process(COMMAND bash "-c" "printf ${Python_SITELIB} | sed 's/^.*usr.//g'" OUTPUT_VARIABLE PY_OUTPUT)
+install(TARGETS pytyndall DESTINATION "${PY_OUTPUT}")
