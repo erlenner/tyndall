@@ -156,7 +156,9 @@ int main()
 
       iterate<c.size()>
       ([](auto index){
-        printf("index: %d\n", index());
+        //printf("index: %d\n", index());
+        static_assert((index >= 0) && (index < c.size()));
+        printf("index: %s\n", typeid(index).name());
       });
     }
   }

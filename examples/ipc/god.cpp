@@ -27,11 +27,11 @@ child children[] =
 {
 //==================== FILL IN PROCESSES ====================
   {
-    .name = "/usr/bin/tyndall_ex_ipc_prod",
+    .name = "/usr/bin/tyndall_ex_ipc_writer",
     .respawn = -1,
   },
   {
-    .name = "/usr/bin/tyndall_ex_ipc_cons",
+    .name = "/usr/bin/tyndall_ex_ipc_reader",
     .args = { "--my_option", "--my_other_option", },
   },
 //===========================================================

@@ -19,7 +19,7 @@ int main()
 
   signal(SIGINT, signal_handler);
 
-  for(int i=0; run; ++i)
+  while(run)
   {
     google::protobuf::Int32Value msg;
 
