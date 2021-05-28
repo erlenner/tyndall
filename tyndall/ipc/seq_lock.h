@@ -2,8 +2,8 @@
 seq_lock.h
 
 Sequence lock: https://en.wikipedia.org/wiki/Seqlock, https://lwn.net/Articles/21355/
-Supports single producer, multiple consumers
-Reader always gets the most recent entry, potentially skipping older entries
+Supports single writer, multiple readers
+Reader always gets the most recent entry
 
 Inspired by:
 http://www.1024cores.net/home/lock-free-algorithms/reader-writer-problem/improved-lock-free-seqlock
@@ -13,6 +13,7 @@ https://github.com/rigtorp/Seqlock
 
 #pragma once
 #include <assert.h>
+#include <errno.h>
 #include "smp.h"
 
 
@@ -21,19 +22,24 @@ https://github.com/rigtorp/Seqlock
 
 struct seq_lock_data
 {
-  int last_seq;
+  int prev_seq = 0;
+  bool has_read_once = false;
 };
 
 template<typename STORAGE>
 class seq_lock
 {
-  static_assert(std::is_nothrow_copy_assignable<STORAGE>::value);
-  static_assert(std::is_trivially_copy_assignable<STORAGE>::value);
+  static_assert(std::is_nothrow_copy_assignable_v<STORAGE>);
+  static_assert(std::is_trivially_copy_assignable_v<STORAGE>);
 
   int seq;
   STORAGE entry;
 
 public:
+
+  typedef STORAGE storage;
+  typedef seq_lock_data data;
+
   void write(const STORAGE& entry, seq_lock_data data = {0})
   {
     int seq = this->seq;
@@ -49,7 +55,7 @@ public:
 
   int read(STORAGE& entry, seq_lock_data& data)
   {
-    int seq1, seq2, ret;
+    int seq1, seq2, rc;
 
     seq1 = smp_read_once(this->seq);
     while(1)
@@ -72,14 +78,25 @@ public:
       seq1 = seq2;
     }
 
-    ret = (seq2 != data.last_seq) ? 0 : -1;
-    data.last_seq = seq2;
-    return ret;
+    if (seq2 != data.prev_seq)
+    {
+      rc = 0;
+      data.prev_seq = seq2;
+      if (!data.has_read_once)
+        data.has_read_once = true;
+    }
+    else if ((seq2 == 0) && !data.has_read_once)
+    {
+      rc = -1;
+      errno = ENOMSG;
+    }
+    else
+    {
+      rc = -1;
+      errno = EAGAIN;
+    }
+    return rc;
   }
-
-  typedef STORAGE storage;
-  typedef seq_lock_data data;
-
 } __attribute__ ((aligned(CACHELINE_BYTES)));
 
 #endif

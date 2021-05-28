@@ -24,7 +24,7 @@
 #define debug_color_red "\033[31m"
 #define debug_color_reset   "\033[0m"
 #define debug_color_bold    "\033[1m"
-#define debug_error(fmt, ...) debug_f(debug_stderr, debug_color_red debug_color_bold fmt debug_color_reset, __VA_ARGS__)
+#define debug_error(fmt, ...) debug_f(debug_stderr, debug_color_red debug_color_bold "[errno: %s] " fmt debug_color_reset, strerror(errno) __VA_OPT__(,) __VA_ARGS__)
 #define debug_error_plain(...) fprintf(debug_stderr, __VA_ARGS__);
 #else
 #define debug_error(...)

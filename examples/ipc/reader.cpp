@@ -29,6 +29,8 @@ int main()
       debug("new entry:\t");
       my_struct_print(debug_plain, entry, "\n");
     }
+    else
+      debug_error("no entry\n");
 
     usleep(3 * 1000);
   }

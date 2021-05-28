@@ -103,8 +103,13 @@ Full examples in [examples/proto/zmq\_proto\_pub.cpp](examples/proto/zmq_proto_p
 ## ipc
 Inter process communication in Linux based on shared memory and lockless data structures.
 
-Shared memory is allocated / mapped in `ipc_write` and `ipc_read` on the first call with a new combination of entry type and id.
-A custom [seqlock](https://en.wikipedia.org/wiki/Seqlock) implementation is used for synchronization.
+Shared memory is created (if needed) and mapped in `ipc_write` and `ipc_read` on the first call with a new combination of entry type and id.
+
+Lockless [seqlock](https://en.wikipedia.org/wiki/Seqlock) is used for synchronization.
+It supports a single writer and multiple readers.
+
+Shared memory is left open on shutdown, so it gets reused on restart.
+You can remove the shared memory using `ipc_cleanup();` or `rm /dev/shm/ipc*`.
 
 Example:
 

@@ -13,7 +13,11 @@
 // L1: https://developer.arm.com/documentation/ddi0388/f/Level-1-Memory-System/About-the-L1-memory-system
 // L2: https://community.nxp.com/thread/510105
 
+// Armv7 memory barriers, as per:
 // https://github.com/torvalds/linux/blob/master/arch/arm/include/asm/barrier.h
+// https://developer.arm.com/documentation/dui0489/c/arm-and-thumb-instructions/miscellaneous-instructions/dmb--dsb--and-isb
+// https://developer.arm.com/documentation/genc007826/latest
+// http://www.cl.cam.ac.uk/~pes20/ppc-supplemental/test7.pdf
 #define smp_dmb(option) __asm__ __volatile__ ("dmb " #option : : : "memory")
 #define smp_mb() smp_dmb(ish);
 #define smp_wmb() smp_dmb(ishst);
@@ -43,6 +47,7 @@
 #define cpu_relax() barrier()
 #endif
 
+// C11 / C++11 acquire release semantics, as per https://en.cppreference.com/w/c/atomic/memory_order and https://en.cppreference.com/w/cpp/atomic/memory_order
 #ifdef __cplusplus
 #define smp_load_acquire(x) std::atomic_load_explicit((std::atomic<typeof(x)>*)&x, std::memory_order_acquire)
 #define smp_store_release(x, val) std::atomic_store_explicit((std::atomic<typeof(x)>*)&x, val, std::memory_order_release)
@@ -53,7 +58,7 @@
 
 
 
-// Variable accesses as per http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0124r5.html#Variable%20Access
+// Protected variable accesses as per http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0124r5.html#Variable%20Access
 
 // KERNEL
 #define smp_read_once(x)  (*(const volatile typeof(x) *)&(x))
