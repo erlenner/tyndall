@@ -24,7 +24,7 @@ int main()
   {
     my_struct entry;
 
-    if (ipc_read(entry, "my_topic") == 0)
+    if (ipc_read(entry, "/my/topic") == 0)
     {
       debug("new entry:\t");
       my_struct_print(debug_plain, entry, "\n");

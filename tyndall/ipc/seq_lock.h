@@ -40,7 +40,7 @@ public:
   typedef STORAGE storage;
   typedef seq_lock_data data;
 
-  void write(const STORAGE& entry, seq_lock_data data = {0})
+  int write(const STORAGE& entry, seq_lock_data data = {0})
   {
     int seq = this->seq;
 
@@ -51,6 +51,7 @@ public:
 
     smp_wmb();
     smp_write_once(this->seq, ++seq);
+    return 0;
   }
 
   int read(STORAGE& entry, seq_lock_data& data)

@@ -4,18 +4,14 @@
 template<typename STORAGE>
 void py_ipc_write(const STORAGE& entry, const char* id)
 {
-  static ipc_writer<STORAGE> writer(id);
-
-  writer.write(entry);
+  ipc_rtid_write(entry, id);
 }
 
 template<typename STORAGE>
 STORAGE py_ipc_read(const char* id)
 {
-  static ipc_reader<STORAGE> reader(id);
-
   STORAGE entry;
-  if (reader.read(entry) == 0)
+  if (ipc_rtid_read(entry, id) == 0)
     return entry;
   else
     return {};

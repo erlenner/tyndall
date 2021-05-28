@@ -23,7 +23,7 @@ int main()
 
   while (run)
   {
-    ipc_write(entry, "my_topic");
+    ipc_write(entry, "/my/topic");
 
     my_struct_inc(entry);
     debug("sending entry:\t");

@@ -14,10 +14,10 @@ enum shmem_error
   SHMEM_MAP_FAILED,
 };
 
-static inline int shmem_create(void** addr, const char* storage_id, int size)
+static inline int shmem_create(void** addr, const char* id, int size)
 {
   // memfd_create
-  int fd = shm_open(storage_id, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+  int fd = shm_open(id, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
   if (fd == -1)
     return SHMEM_SHM_FAILED;
 
@@ -37,10 +37,10 @@ static inline int shmem_unmap(void *addr, int size)
   return munmap(addr, size);
 }
 
-static inline int shmem_unlink(const char* storage_id)
+static inline int shmem_unlink(const char* id)
 {
   // shm_open cleanup
-  return shm_unlink(storage_id);
+  return shm_unlink(id);
 }
 
 static inline int shmem_unlink_all(const char *prefix)
@@ -73,7 +73,7 @@ enum shmem_permission
   SHMEM_READ = 1<<0,
   SHMEM_WRITE = 1<<1,
 };
-template<typename DATA_STRUCTURE, int PERMISSIONS, typename PREFIX = strval_t("shmem")>
+template<typename DATA_STRUCTURE, int PERMISSIONS, typename ID = strval_t("")>
 class shmem_data
 {
   DATA_STRUCTURE *ds;
@@ -82,39 +82,53 @@ class shmem_data
 
 public:
 
-  shmem_data() : ds(NULL) {}
-
-  shmem_data(const char *id)
+  shmem_data()
+  : ds(NULL)
   {
+    static_assert(ID::occurrences('/') == 0, "Id can't have slashes");
+
+    init(ID::c_str());
+  }
+
+  shmem_data(const char* id)
+  {
+    static_assert(ID::length() == 0, "Static id should be empty when specifying runtime id");
+
     init(id);
   }
 
   int init(const char *id)
   {
-    char handle[PREFIX::size() + 1 + strlen(id) + 1];
-    sprintf(handle, "%s_%s", PREFIX::c_str(), id);
-
-    int rc = shmem_create((void**)&ds, handle, sizeof(DATA_STRUCTURE));
-
+    int rc = shmem_create((void**)&ds, id, sizeof(DATA_STRUCTURE));
     return rc;
   }
 
   ~shmem_data()
   {
-    shmem_unmap((void*)ds, sizeof(DATA_STRUCTURE));
+    if ((ds != NULL) && ((void*)ds != (void*)-1))
+      shmem_unmap((void*)ds, sizeof(DATA_STRUCTURE));
   }
 
-  void write(const storage& entry)
+  int write(const storage& entry)
   {
-    static_assert(PERMISSIONS & SHMEM_WRITE, "not a writer");
-    ds->write(entry, data);
+    static_assert(PERMISSIONS & SHMEM_WRITE, "needs write permission");
+    return ds->write(entry, data);
   }
 
   int read(storage& entry)
   {
-    static_assert(PERMISSIONS & SHMEM_READ, "not a reader");
+    static_assert(PERMISSIONS & SHMEM_READ, "needs read permission");
     return ds->read(entry, data);
   }
 
+  // disable copy
+  shmem_data operator=(const shmem_data) = delete;
+  shmem_data(shmem_data& other) = delete;
+
+  shmem_data(shmem_data&& other)
+    : ds(other.ds)
+  {
+    other.ds = NULL; // invalidate shared memory
+  }
 };
 #endif
