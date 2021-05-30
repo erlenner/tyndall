@@ -75,13 +75,6 @@ endforeach(CPP_TEST)
 add_custom_target(tests)
 add_dependencies(tests ${CPP_TEST_TARGETS})
 
-file(GLOB PY_TEST "tests/*.py")
-foreach(PY_TEST ${PY_TESTS})
-  execute_process(COMMAND bash "-c" "printf ${TEST_PREFIX}$(basename ${PY_TEST} | cut -f 1 -d '.')" OUTPUT_VARIABLE PY_TEST_TARGET)
-  install(PROGRAMS ${PY_TEST_TARGET} DESTINATION bin OPTIONAL)
-endforeach(PY_TEST)
-
-
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(PythonLibs 3 REQUIRED)
 find_package(Boost COMPONENTS python REQUIRED)
