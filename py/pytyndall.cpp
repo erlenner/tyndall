@@ -2,9 +2,9 @@
 #include <tyndall/ipc/ipc.h>
 
 template<typename STORAGE>
-void py_ipc_write(const STORAGE& entry, const char* id)
+int py_ipc_write(const STORAGE& entry, const char* id)
 {
-  ipc_rtid_write(entry, id);
+  return ipc_rtid_write(entry, id);
 }
 
 template<typename STORAGE>

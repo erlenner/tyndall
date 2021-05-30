@@ -87,6 +87,7 @@ int main()
 
   constexpr auto sv = "hei"_strval;
   printf("strval: %s\n", sv.c_str());
+  printf("strval from type: %s\n", decltype(sv)::c_str());
   printf("strval length: %d\n", (""_strval).length());
   printf("strval sum: %s\n", ("hei"_strval + "du"_strval).c_str());
   printf("occurrences: %d\n", ("hei din sei"_strval).occurrences('i'));

@@ -22,6 +22,36 @@ make examples
 
 # Highlights
 
+## meta/iterate
+
+Function that calls the given callback with integral constants from 0 to the specified index.
+Useful for iterating at compile time.
+
+Example:
+```cpp
+#include <tyndall/meta/iterate.h>
+
+iterate<10>(
+[](auto index){
+  // index = std::integral_constant<int, 0>(), std::integral_constant<int, 1>(), ... ,std::integral_constant<int, 9>()
+  static_assert((index >= 0) && (index < 10));
+  printf("%d ", index()); // 0 1 2 3 4 5 6 7 8 9
+});
+```
+
+## meta/strval
+
+compile time string which ensures "string A"\_strval and "string A"\_strval have the same type,
+while "string A"\_strval and "string B"\_strval have different types.
+
+Example:
+```cpp
+constexpr auto s = "hei"_strval;
+printf("%s\n", s.c_str());
+printf("%s\n", decltype(sv)::c_str());
+printf("%s\n", ("belle"_strval).replace<'e', 'a'>().c_str());
+```
+
 ## meta/typevals
 Container where entries can have different types.
 
@@ -39,23 +69,6 @@ constexpr auto A42 = tv.get<1>();
 static_assert(A42.b == 2);
 constexpr auto B391 = tv[std::integral_constant<int, 2>()];
 static_assert(B391.x == 3);
-```
-
-## meta/iterate
-
-Function that calls the given callback with integral constants from 0 to the specified index.
-Useful for iterating at compile time.
-
-Example:
-```cpp
-#include <tyndall/meta/iterate.h>
-
-iterate<10>(
-[](auto index){
-  // index = std::integral_constant<int, 0>(), std::integral_constant<int, 1>(), ... ,std::integral_constant<int, 9>()
-  static_assert((index >= 0) && (index < 10));
-  printf("%d ", index()); // 0 1 2 3 4 5 6 7 8 9
-});
 ```
 
 ## zmq\_proto
