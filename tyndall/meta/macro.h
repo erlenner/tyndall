@@ -1,3 +1,4 @@
+#pragma once
 // macro tutorial: http://saadahmad.ca/cc-preprocessor-metaprogramming-basic-pattern-matching-macros-and-conditionals/
 
 #define M_EMPTY() 

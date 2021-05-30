@@ -3,6 +3,9 @@
 // compile time string which ensures "string A"_strval and "string A"_strval have the same type,
 // while "string A"_strval and "string B"_strval have different types
 
+#include <type_traits>
+#include <tyndall/meta/hash.h>
+
 template<char... Chars>
 struct strval
 {
@@ -12,9 +15,15 @@ template<char Lhs, char... Rhs>
 struct strval<Lhs, Rhs...>
 {
   template<char... Args>
-  constexpr auto operator+(strval<Args...> args) const noexcept
+  constexpr auto operator+(strval<Args...> rhs) const noexcept
   {
     return strval<Lhs, Rhs..., Args...>();
+  }
+
+  template<char... Args>
+  constexpr auto operator==(strval<Args...> rhs) const noexcept
+  {
+    return std::is_same<strval<Lhs, Rhs...>, strval<Args...>>();
   }
 
   static constexpr const char* c_str() noexcept
@@ -24,7 +33,7 @@ struct strval<Lhs, Rhs...>
 
   static constexpr int length() noexcept
   {
-    return sizeof... (Rhs);
+    return 1 + sizeof... (Rhs);
   }
 
   static constexpr int occurrences(char c) noexcept
@@ -46,6 +55,11 @@ struct strval<Lhs, Rhs...>
     else
       return strval<Lhs, Rhs...>{};
   }
+
+  static constexpr unsigned hash()
+  {
+    return hash_fnv1a_32(c_str(), length());
+  }
 };
 
 template<>
@@ -55,6 +69,12 @@ struct strval<>
   constexpr auto operator+(strval<Args...> args) const noexcept
   {
     return strval<Args...>();
+  }
+
+  template<char... Args>
+  constexpr auto operator==(strval<Args...> rhs) const noexcept
+  {
+    return sizeof...(Args) == 0;
   }
 
   static constexpr const char* c_str() noexcept
@@ -83,6 +103,11 @@ struct strval<>
   {
     return strval<>{};
   }
+
+  static constexpr unsigned hash()
+  {
+    return hash_fnv1a_32(c_str(), 0);
+  }
 };
 
 template<typename Char, Char... Args>
@@ -91,9 +116,15 @@ constexpr strval<Args...> operator""_strval() noexcept
   return {};
 }
 
+template<unsigned remainder, unsigned... digits>
+struct to_strval : to_strval<remainder / 10, remainder % 10, digits...> {};
+
+template<unsigned... digits>
+struct to_strval<0, digits...> : strval<('0' + digits)...>{};
+
 #include <tyndall/meta/macro.h>
 #define create_strval(str) M_CAT(str, _strval)
-#define strval_t(str) typeof(M_CAT(str, _strval))
+#define strval_t(str) decltype(M_CAT(str, _strval))
 
 //#include <ostream>
 //template<char... Args>
