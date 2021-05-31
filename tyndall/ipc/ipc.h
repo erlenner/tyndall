@@ -12,16 +12,15 @@
 #include "seq_lock.h"
 #include <tyndall/meta/strval.h>
 
-// Ipc ids are unique except for leading slashes.
-
 template<typename STRING>
 using ipc_id_remove_leading_slashes = decltype(STRING::template remove_leading<'/'>());
 
 template<typename STRING>
 using ipc_id_replace_slashes_with_underscores = decltype(STRING::template replace<'/', '_'>());
 
+// Ipc ids are unique except for leading slashes.
 template<typename ID>
-using ipc_id_convert =
+using ipc_id_prepare =
   decltype(create_strval(IPC_SHMEM_PREFIX)
   + "_"_strval
   + to_strval<ipc_id_remove_leading_slashes<ID>::hash()>{} // hash id to prevent name clash between f.ex. /my/topic and my_topic
@@ -34,9 +33,9 @@ using ipc_id_convert =
 #define ipc_read(entry, id) ipc_lazy_read(entry, id ## _strval)
 
 template<typename STORAGE, typename ID>
-using ipc_writer = shmem_data<seq_lock<STORAGE>, SHMEM_WRITE, ipc_id_convert<ID>>;
+using ipc_writer = shmem_data<seq_lock<STORAGE>, SHMEM_WRITE, ipc_id_prepare<ID>>;
 template<typename STORAGE, typename ID>
-using ipc_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ, ipc_id_convert<ID>>;
+using ipc_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ, ipc_id_prepare<ID>>;
 
 template<typename STORAGE, typename ID>
 int ipc_lazy_write(const STORAGE& entry, ID)
@@ -75,9 +74,9 @@ TRANSPORT<STORAGE>& ipc_rtid_lazy_get(const char* id)
   while (*id == '/')
     ++id;
 
-  std::string converted_id = IPC_SHMEM_PREFIX "_" + std::to_string(hash_fnv1a_32(id, strlen(id))) + "_" + std::string{id};
+  std::string prepared_id = IPC_SHMEM_PREFIX "_" + std::to_string(hash_fnv1a_32(id, strlen(id))) + "_" + std::string{id};
   // replace slash with underscore
-  for (char& c : converted_id)
+  for (char& c : prepared_id)
     if (c == '/')
       c = '_';
 
@@ -89,10 +88,10 @@ TRANSPORT<STORAGE>& ipc_rtid_lazy_get(const char* id)
   static std::vector<registry_item> registry;
 
   for (auto& item : registry)
-    if (item.id == converted_id)
+    if (item.id == prepared_id)
       return item.transport;
 
-  registry.push_back(registry_item{ .id = converted_id, .transport = TRANSPORT<STORAGE>(converted_id.c_str()) });
+  registry.push_back(registry_item{ .id = prepared_id, .transport = TRANSPORT<STORAGE>(prepared_id.c_str()) });
   return registry.back().transport;
 }
 

@@ -82,7 +82,7 @@ class shmem_data
 
 public:
 
-  shmem_data()
+  shmem_data() noexcept
   : ds(NULL)
   {
     static_assert(ID::occurrences('/') == 0, "Id can't have slashes");
@@ -90,43 +90,45 @@ public:
     init(ID::c_str());
   }
 
-  shmem_data(const char* id)
+  shmem_data(const char* id) noexcept
   {
     static_assert(ID::length() == 0, "Static id should be empty when specifying runtime id");
 
     init(id);
   }
 
-  int init(const char *id)
+  int init(const char *id) noexcept
   {
     int rc = shmem_create((void**)&ds, id, sizeof(DATA_STRUCTURE));
     return rc;
   }
 
-  ~shmem_data()
+  ~shmem_data() noexcept
   {
     if ((ds != NULL) && ((void*)ds != (void*)-1))
       shmem_unmap((void*)ds, sizeof(DATA_STRUCTURE));
   }
 
-  int write(const storage& entry)
+  int write(const storage& entry) noexcept
   {
     static_assert(PERMISSIONS & SHMEM_WRITE, "needs write permission");
     return ds->write(entry, data);
   }
 
-  int read(storage& entry)
+  int read(storage& entry) noexcept
   {
     static_assert(PERMISSIONS & SHMEM_READ, "needs read permission");
     return ds->read(entry, data);
   }
 
   // disable copy
-  shmem_data operator=(const shmem_data) = delete;
-  shmem_data(shmem_data& other) = delete;
+  shmem_data operator=(const shmem_data) noexcept = delete;
+  shmem_data(shmem_data& other) noexcept = delete;
+  shmem_data operator=(shmem_data&& other) noexcept = delete;
 
   shmem_data(shmem_data&& other)
     : ds(other.ds)
+    , data(other.data)
   {
     other.ds = NULL; // invalidate shared memory
   }

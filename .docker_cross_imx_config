@@ -2,4 +2,4 @@
 # Included from https://github.com/BluEye-Robotics/docker_images/blob/e40e3a2fcf61515c57e41e7e7b369c1fd096de9b/cross-imx/config.sh#L16
 PROJECT_NAME=tyndall
 TARGET_PATH_PREFIX=/usr
-EXTRA_TARGETS=examples tests
+EXTRA_TARGETS="examples tests"

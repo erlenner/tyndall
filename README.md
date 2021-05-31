@@ -50,6 +50,7 @@ constexpr auto s = "hei"_strval;
 printf("%s\n", s.c_str());
 printf("%s\n", decltype(sv)::c_str());
 printf("%s\n", ("belle"_strval).replace<'e', 'a'>().c_str());
+printf("%s\n", to_strval<42>::c_str());
 ```
 
 ## meta/typevals
