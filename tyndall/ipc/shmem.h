@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <string.h>
+#include <typeinfo>
+#include <typeindex>
 #include <tyndall/meta/strval.h>
 
 enum shmem_error
@@ -68,6 +70,10 @@ static inline int shmem_unlink_all(const char *prefix)
 
 #ifdef __cplusplus
 #include <type_traits>
+#include <assert.h>
+#include <tyndall/meta/typeinfo.h>
+#include "smp.h"
+
 enum shmem_permission
 {
   SHMEM_READ = 1<<0,
@@ -76,14 +82,14 @@ enum shmem_permission
 template<typename DATA_STRUCTURE, int PERMISSIONS, typename ID = strval_t("")>
 class shmem_data
 {
-  DATA_STRUCTURE *ds;
+  void *buf;
   typename DATA_STRUCTURE::data data;
   typedef typename DATA_STRUCTURE::storage storage;
 
 public:
 
   shmem_data() noexcept
-  : ds(NULL)
+  : buf(NULL)
   {
     static_assert(ID::occurrences('/') == 0, "Id can't have slashes");
 
@@ -97,28 +103,40 @@ public:
     init(id);
   }
 
-  int init(const char *id) noexcept
+  void init(const char *id) noexcept
   {
-    int rc = shmem_create((void**)&ds, id, sizeof(DATA_STRUCTURE));
-    return rc;
+    //static_assert(type_info_hash(DATA_STRUCTURE) == 0);
+    //printf("%u\n\n", type_info_hash(DATA_STRUCTURE));
+
+    constexpr auto type_hash = type_info_hash(DATA_STRUCTURE);
+
+    constexpr int size = sizeof(DATA_STRUCTURE) + sizeof(type_hash);
+    int rc = shmem_create(&buf, id, size);
+
+    assert(rc == 0);
+
+    // put type hash in the end for validation
+    auto hash_loc = reinterpret_cast<decltype(&type_hash)>(reinterpret_cast<DATA_STRUCTURE*>(buf) + 1);
+    if (smp_cmp_xch(*hash_loc, 0, type_hash) == -1)
+      assert(*hash_loc == type_hash);
   }
 
   ~shmem_data() noexcept
   {
-    if ((ds != NULL) && ((void*)ds != (void*)-1))
-      shmem_unmap((void*)ds, sizeof(DATA_STRUCTURE));
+    if ((buf != NULL) && (buf != (void*)-1))
+      shmem_unmap(buf, sizeof(DATA_STRUCTURE));
   }
 
   int write(const storage& entry) noexcept
   {
     static_assert(PERMISSIONS & SHMEM_WRITE, "needs write permission");
-    return ds->write(entry, data);
+    return reinterpret_cast<DATA_STRUCTURE*>(buf)->write(entry, data);
   }
 
   int read(storage& entry) noexcept
   {
     static_assert(PERMISSIONS & SHMEM_READ, "needs read permission");
-    return ds->read(entry, data);
+    return reinterpret_cast<DATA_STRUCTURE*>(buf)->read(entry, data);
   }
 
   // disable copy
@@ -127,10 +145,10 @@ public:
   shmem_data operator=(shmem_data&& other) noexcept = delete;
 
   shmem_data(shmem_data&& other)
-    : ds(other.ds)
+    : buf(other.buf)
     , data(other.data)
   {
-    other.ds = NULL; // invalidate shared memory
+    other.buf = NULL; // invalidate shared memory
   }
 };
 #endif

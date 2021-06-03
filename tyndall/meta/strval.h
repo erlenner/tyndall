@@ -4,7 +4,6 @@
 // while "string A"_strval and "string B"_strval have different types
 
 #include <type_traits>
-#include <tyndall/meta/hash.h>
 
 template<char... Chars>
 struct strval
@@ -55,11 +54,6 @@ struct strval<Lhs, Rhs...>
     else
       return strval<Lhs, Rhs...>{};
   }
-
-  static constexpr unsigned hash()
-  {
-    return hash_fnv1a_32(c_str(), length());
-  }
 };
 
 template<>
@@ -102,11 +96,6 @@ struct strval<>
   static constexpr auto remove_leading() noexcept
   {
     return strval<>{};
-  }
-
-  static constexpr unsigned hash()
-  {
-    return hash_fnv1a_32(c_str(), 0);
   }
 };
 

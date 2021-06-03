@@ -72,3 +72,10 @@
 //#define smp_read_once(x)  ((atomic_load_explicit((const volatile typeof(x) *)(&(x)), memory_order_relaxed)))
 //#define smp_write_once(x, val) atomic_store_explicit((volatile typeof(x) *)(&(x)), val, memory_order_relaxed)
 //#endif
+
+
+// compare exchange
+#ifdef __cplusplus
+#define smp_cmp_xch(x, expected, desired) ({ typeof(expected) tmp = expected; std::atomic_compare_exchange_strong((std::atomic<typeof((x))>*)(&(x)), &tmp, desired) ? 0 : -1; })
+#else
+#endif

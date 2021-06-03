@@ -11,9 +11,13 @@
 
 #include "seq_lock.h"
 #include <tyndall/meta/strval.h>
+#include <tyndall/meta/hash.h>
 
 template<typename STRING>
 using ipc_id_remove_leading_slashes = decltype(STRING::template remove_leading<'/'>());
+
+template<typename STRING>
+using ipc_id_hash = decltype(to_strval<hash_fnv1a_32(STRING{})>{});
 
 template<typename STRING>
 using ipc_id_replace_slashes_with_underscores = decltype(STRING::template replace<'/', '_'>());
@@ -23,7 +27,7 @@ template<typename ID>
 using ipc_id_prepare =
   decltype(create_strval(IPC_SHMEM_PREFIX)
   + "_"_strval
-  + to_strval<ipc_id_remove_leading_slashes<ID>::hash()>{} // hash id to prevent name clash between f.ex. /my/topic and my_topic
+  + ipc_id_hash<ipc_id_remove_leading_slashes<ID>>{} // hash id to prevent name clash between f.ex. /my/topic and my_topic
   + "_"_strval
   + ipc_id_replace_slashes_with_underscores<ipc_id_remove_leading_slashes<ID>>{}); // switch slashes with underscores
 
@@ -56,11 +60,12 @@ int ipc_lazy_read(STORAGE& entry, ID)
 // Ipc methods with id specified at runtime.
 // These methods are templated on storage type only,
 // and need to explicitly keep track of lazy initialization of transport.
-#define ipc_rtid_write(entry, id) ipc_rtid_lazy_get<ipc_rtid_writer, std::remove_cv_t<std::remove_reference_t<decltype(entry)>>>(id).write(entry)
-#define ipc_rtid_read(entry, id) ipc_rtid_lazy_get<ipc_rtid_reader, std::remove_cv_t<std::remove_reference_t<decltype(entry)>>>(id).read(entry)
+#define ipc_rtid_write(entry, id) ipc_rtid_lazy_get<ipc_rtid_writer, typeinfo_remove_cvref_t<decltype(entry)>>(id).write(entry)
+#define ipc_rtid_read(entry, id) ipc_rtid_lazy_get<ipc_rtid_reader, typeinfo_remove_cvref_t<decltype(entry)>>(id).read(entry)
 
 #include <string>
 #include <vector>
+#include <tyndall/meta/typeinfo.h>
 
 template<typename STORAGE>
 using ipc_rtid_writer = shmem_data<seq_lock<STORAGE>, SHMEM_WRITE>;
@@ -80,6 +85,7 @@ TRANSPORT<STORAGE>& ipc_rtid_lazy_get(const char* id)
     if (c == '/')
       c = '_';
 
+  // manual registry is needed as substitution for compile time template matching
   struct registry_item
   {
     std::string id;
