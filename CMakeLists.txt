@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall")
+add_definitions(-DDEBUG)
 
 include_directories(${CMAKE_SOURCE_DIR})
 set(LD_FLAGS "-lpthread -lzmq -lprotobuf -lfmt -lrt")
