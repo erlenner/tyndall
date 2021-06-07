@@ -72,7 +72,6 @@ static inline int shmem_unlink_all(const char *prefix)
 #include <type_traits>
 #include <assert.h>
 #include <tyndall/meta/typeinfo.h>
-#include <tyndall/debug.h>
 #include "smp.h"
 
 enum shmem_permission
@@ -114,12 +113,12 @@ public:
     constexpr int size = sizeof(DATA_STRUCTURE) + sizeof(type_hash);
     int rc = shmem_create(&buf, id, size);
 
-    debug_assert(rc == 0);
+    assert(rc == 0);
 
     // put type hash in the end for validation
     auto hash_loc = reinterpret_cast<decltype(&type_hash)>(reinterpret_cast<DATA_STRUCTURE*>(buf) + 1);
     if (smp_cmp_xch(*hash_loc, 0, type_hash) == -1)
-      debug_assert(*hash_loc == type_hash);
+      assert(*hash_loc == type_hash);
   }
 
   ~shmem_data() noexcept
