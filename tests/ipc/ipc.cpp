@@ -1,44 +1,65 @@
+#include <assert.h>
 #include <tyndall/ipc/ipc.h>
+#include <tyndall/meta/macro.h>
+
+struct my_struct
+{
+  long a;
+  double b;
+  char c;
+  unsigned long d;
+  //bool operator==(my_struct) = default; // c++20
+  bool operator==(my_struct rhs)
+  {
+    return (rhs.a == a)
+      && (rhs.b == b)
+      && (rhs.c == c)
+      && (rhs.d == d);
+  }
+};
+
+my_struct ref
+{
+  .a = 3,
+  .b = 1,
+  .c = 4,
+  .d = 2,
+};
+
+#define check(cond) do { if (!(cond)){ ipc_cleanup(); printf( __FILE__ ":" M_STRINGIFY(__LINE__) " " "Assertion failed: " #cond "\n"); exit(1); }} while(0)
 
 int main()
 {
+  ipc_cleanup();
   {
-    struct my_struct
-    {
-      long a;
-      double b;
-      char c;
-      unsigned long d;
-      //bool operator==(my_struct) = default; // c++20
-      bool operator==(my_struct rhs)
-      {
-        return (rhs.a == a)
-          && (rhs.b == b)
-          && (rhs.c == c)
-          && (rhs.d == d);
-      }
-    };
-
-    my_struct ref
-    {
-      .a = 3,
-      .b = 1,
-      .c = 4,
-      .d = 2,
-    };
-
     {
       my_struct entry = ref;
-      int rc = ipc_write(entry, "/test/topic");
-      assert(rc == 0);
+      int rc = ipc_write(entry, "/test/standard");
+      check(rc == 0);
     }
 
     {
       my_struct entry = {0};
-      int rc = ipc_read(entry, "/test/topic");
-      assert(rc == 0);
-      assert(entry == ref);
+      int rc = ipc_read(entry, "/test/standard");
+      check(rc == 0);
+      check(entry == ref);
     }
+  }
+
+  {
+    my_struct entry = ref;
+    check(ipc_read(entry, "/test/errors") == -1);
+    check(errno == ENOMSG);
+    check(ipc_write(entry, "/test/errors") == 0);
+    check(ipc_read(entry, "/test/errors") == 0);
+    check(ipc_read(entry, "/test/errors") == -1);
+    check(errno == EAGAIN);
+    check(ipc_read(entry, "/test/errors") == -1);
+    check(errno == EAGAIN);
+    check(ipc_write(entry, "/test/errors") == 0);
+    check(ipc_read(entry, "/test/errors") == 0);
+    check(ipc_read(entry, "/test/errors") == -1);
+    check(errno == EAGAIN);
   }
 
   {
@@ -50,24 +71,73 @@ assert rc == 0, 'write failed'
 f = ipc_read_float('/test/pytopic')
 assert f == 42, 'got different value back'
     ")");
-    assert(rc == 0);
+    check(rc == 0);
   }
 
   {
     {
       int rc = system(R"(python -c "
 from pytyndall import ipc_write_float, ipc_read_float
-rc = ipc_write_float(66, '/test/py2c++topic')
+rc = ipc_write_float(42, '/test/py2c++topic')
 assert rc == 0, 'write failed'
     ")");
-      assert(rc == 0);
+      check(rc == 0);
     }
     {
       float entry;
       int rc = ipc_read(entry, "/test/py2c++topic");
-      assert(rc == 0);
-      assert(entry == 66);
+      check(rc == 0);
+      check(entry == 42);
     }
   }
 
+  {
+    {
+      int rc = ipc_rtid_write(ref, "/test/rtid");
+      check(rc == 0);
+    }
+
+    {
+      my_struct entry;
+      int rc = ipc_rtid_read(entry, "/test/rtid");
+      check(rc == 0);
+      check(entry == ref);
+    }
+  }
+
+  {
+    {
+      //ipc_writer<my_struct, strval_t("test/mt_safe")> writer;
+      auto writer = create_ipc_writer(my_struct, "test/mt_safe");
+      int rc = writer.write(ref);
+      check(rc == 0);
+    }
+
+    {
+      //ipc_reader<my_struct, strval_t("test/mt_safe")> reader;
+      auto reader = create_ipc_reader(my_struct, "test/mt_safe");
+      my_struct entry;
+      int rc = reader.read(entry);
+      check(rc == 0);
+      check(entry == ref);
+    }
+  }
+
+  {
+    {
+      auto writer = create_ipc_rtid_writer<my_struct>("test/rtid_mt_safe");
+      int rc = writer.write(ref);
+      check(rc == 0);
+    }
+
+    {
+      auto reader = create_ipc_rtid_reader<my_struct>("test/rtid_mt_safe");
+      my_struct entry;
+      int rc = reader.read(entry);
+      check(rc == 0);
+      check(entry == ref);
+    }
+  }
+
+  ipc_cleanup();
 }

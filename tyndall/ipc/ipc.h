@@ -41,6 +41,9 @@ using ipc_writer = shmem_data<seq_lock<STORAGE>, SHMEM_WRITE, ipc_id_prepare<ID>
 template<typename STORAGE, typename ID>
 using ipc_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ, ipc_id_prepare<ID>>;
 
+#define create_ipc_writer(storage_type, id) (ipc_writer<storage_type, decltype(id ## _strval)>{})
+#define create_ipc_reader(storage_type, id) (ipc_reader<storage_type, decltype(id ## _strval)>{})
+
 template<typename STORAGE, typename ID>
 int ipc_lazy_write(const STORAGE& entry, ID)
 {
@@ -60,20 +63,21 @@ int ipc_lazy_read(STORAGE& entry, ID)
 // Ipc methods with id specified at runtime.
 // These methods are templated on storage type only,
 // and need to explicitly keep track of lazy initialization of transport.
-#define ipc_rtid_write(entry, id) ipc_rtid_lazy_get<ipc_rtid_writer, typeinfo_remove_cvref_t<decltype(entry)>>(id).write(entry)
-#define ipc_rtid_read(entry, id) ipc_rtid_lazy_get<ipc_rtid_reader, typeinfo_remove_cvref_t<decltype(entry)>>(id).read(entry)
+#define ipc_rtid_write(entry, id) create_ipc_rtid_lazy<ipc_rtid_writer, typeinfo_remove_cvref_t<decltype(entry)>>(id).write(entry)
+#define ipc_rtid_read(entry, id) create_ipc_rtid_lazy<ipc_rtid_reader, typeinfo_remove_cvref_t<decltype(entry)>>(id).read(entry)
 
 #include <string>
 #include <vector>
 #include <tyndall/meta/typeinfo.h>
+#include <shared_mutex>
 
 template<typename STORAGE>
 using ipc_rtid_writer = shmem_data<seq_lock<STORAGE>, SHMEM_WRITE>;
 template<typename STORAGE>
 using ipc_rtid_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ>;
 
-template<template<typename>typename TRANSPORT, typename STORAGE>
-TRANSPORT<STORAGE>& ipc_rtid_lazy_get(const char* id)
+template<typename STORAGE>
+std::string ipc_rtid_get_id(const char* id)
 {
   // remove leading slashes
   while (*id == '/')
@@ -85,6 +89,28 @@ TRANSPORT<STORAGE>& ipc_rtid_lazy_get(const char* id)
     if (c == '/')
       c = '_';
 
+  return prepared_id;
+}
+
+template<typename STORAGE>
+ipc_rtid_writer<STORAGE> create_ipc_rtid_writer(const char* id)
+{
+  std::string prepared_id = ipc_rtid_get_id<STORAGE>(id);
+  return ipc_rtid_writer<STORAGE>{prepared_id.c_str()};
+}
+
+template<typename STORAGE>
+ipc_rtid_reader<STORAGE> create_ipc_rtid_reader(const char* id)
+{
+  std::string prepared_id = ipc_rtid_get_id<STORAGE>(id);
+  return ipc_rtid_reader<STORAGE>{prepared_id.c_str()};
+}
+
+template<template<typename>typename TRANSPORT, typename STORAGE>
+TRANSPORT<STORAGE>& create_ipc_rtid_lazy(const char* id)
+{
+  std::string prepared_id = ipc_rtid_get_id<STORAGE>(id);
+
   // manual registry is needed as substitution for compile time template matching
   struct registry_item
   {
@@ -92,12 +118,20 @@ TRANSPORT<STORAGE>& ipc_rtid_lazy_get(const char* id)
     TRANSPORT<STORAGE> transport;
   };
   static std::vector<registry_item> registry;
+  static std::shared_mutex m_registry;
 
-  for (auto& item : registry)
-    if (item.id == prepared_id)
-      return item.transport;
+  {
+    std::shared_lock lock(m_registry);
+    for (auto& item : registry)
+      if (item.id == prepared_id)
+        return item.transport;
+  }
 
-  registry.push_back(registry_item{ .id = prepared_id, .transport = TRANSPORT<STORAGE>(prepared_id.c_str()) });
+  {
+    std::unique_lock lock(m_registry);
+    registry.push_back(registry_item{ .id = prepared_id, .transport = TRANSPORT<STORAGE>{prepared_id.c_str()} });
+  }
+
   return registry.back().transport;
 }
 
