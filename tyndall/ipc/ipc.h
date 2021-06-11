@@ -118,17 +118,14 @@ TRANSPORT<STORAGE>& create_ipc_rtid_lazy(const char* id)
     TRANSPORT<STORAGE> transport;
   };
   static std::vector<registry_item> registry;
-  static std::shared_mutex m_registry;
 
   {
-    std::shared_lock lock(m_registry);
     for (auto& item : registry)
       if (item.id == prepared_id)
         return item.transport;
   }
 
   {
-    std::unique_lock lock(m_registry);
     registry.push_back(registry_item{ .id = prepared_id, .transport = TRANSPORT<STORAGE>{prepared_id.c_str()} });
   }
 
