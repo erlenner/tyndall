@@ -23,6 +23,9 @@ typedef struct
 
 } child;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings" // ref https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94554
+
 child children[] =
 {
 //==================== FILL IN PROCESSES ====================
@@ -37,6 +40,8 @@ child children[] =
 //===========================================================
 };
 #define n_children len(children)
+
+#pragma GCC diagnostic pop
 
 //==================== STATUSES THAT BYPASS RESPAWN =========
 // Children that are configured to respawn will not be respawned if they return with these statuses:
@@ -96,7 +101,7 @@ void exit_handler(int sig)
 
 void child_handler(int sig)
 {
-  pid_t pid;
+  pid_t pid = -1;
   int status;
 
   for (pid_t tmp_pid; (tmp_pid = waitpid(-1, &status, WNOHANG)) > 0;)

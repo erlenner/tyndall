@@ -231,7 +231,7 @@ send(const Message& payload, const socket_t<socket_type>& socket, send_recv_flag
   }
   else
   {
-    const int payload_size = payload.ByteSizeLong();
+    const int payload_size = static_cast<int>(payload.ByteSizeLong());
     char payload_buf[payload_size];
     bool ser_rc = payload.SerializeToArray(payload_buf, payload_size);
     zmq_proto_assert(ser_rc);

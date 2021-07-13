@@ -29,14 +29,16 @@ typedef struct
       }                         \
     }while(0)
 
-//typedef struct
-//{
-//  int i;
-//} my_struct;
-//
-//#define my_struct_print(print, s, ...) print("%d" __VA_ARGS__ , s.i)
-//
-//#define my_struct_inc(entry)    \
-//    do{                         \
-//      ++(entry.i);   \
-//    }while(0)
+/*
+typedef struct
+{
+  int i;
+} my_struct;
+
+#define my_struct_print(print, s, ...) print("%d" __VA_ARGS__ , s.i)
+
+#define my_struct_inc(entry)    \
+    do{                         \
+      ++(entry.i);   \
+    }while(0)
+*/

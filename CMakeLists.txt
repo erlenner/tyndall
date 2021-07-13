@@ -3,8 +3,11 @@ cmake_minimum_required(VERSION 2.8.3)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall")
+
+set(C_CXX_EXTRA_FLAGS "-O2 -Wall -Wconversion")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${C_CXX_EXTRA_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_CXX_EXTRA_FLAGS}")
+
 add_definitions(-DDEBUG)
 
 include_directories(${CMAKE_SOURCE_DIR})

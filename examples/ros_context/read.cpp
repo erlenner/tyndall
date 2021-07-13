@@ -24,7 +24,7 @@ int main(int argc, char** argv)
 
   while(run)
   {
-    std_msgs::Int32 msg;
+    std_msgs::Int32 msg{};
 
 
     ros_context_read(msg, "/ex_ros_context");
