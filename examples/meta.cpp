@@ -8,10 +8,7 @@ template<typename T>
 struct tstruct
 {
   using Type = T;
-  //typedef T Type;
-  int i;
   T a;
-  int ii;
 };
 
 int main()

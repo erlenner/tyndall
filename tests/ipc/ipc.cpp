@@ -39,7 +39,7 @@ int main()
     }
 
     {
-      my_struct entry = {0};
+      my_struct entry = {};
       int rc = ipc_read(entry, "/test/standard");
       check(rc == 0);
       check(entry == ref);

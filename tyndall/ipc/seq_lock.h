@@ -40,7 +40,7 @@ public:
   typedef STORAGE storage;
   typedef seq_lock_data data;
 
-  int write(const STORAGE& entry, seq_lock_data data = {0})
+  int write(const STORAGE& entry, seq_lock_data&)
   {
     int seq = this->seq;
 

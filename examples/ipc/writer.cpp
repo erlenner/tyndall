@@ -19,7 +19,7 @@ int main()
 {
   signal(SIGINT, sig_handler);
 
-  my_struct entry = {0};
+  my_struct entry = {};
 
   while (run)
   {
