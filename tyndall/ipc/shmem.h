@@ -70,6 +70,7 @@ static inline int shmem_unlink_all(const char *prefix)
 
 #ifdef __cplusplus
 #include <type_traits>
+#include <concepts>
 #include <assert.h>
 #include <tyndall/meta/typeinfo.h>
 #include "smp.h"
@@ -80,7 +81,16 @@ enum shmem_permission
   SHMEM_WRITE = 1<<1,
 };
 
+template<typename DATA_STRUCTURE>
+concept shmem_data_structure
+= requires(DATA_STRUCTURE ds, typename DATA_STRUCTURE::storage storage, typename DATA_STRUCTURE::state state)
+{
+  { ds.write(storage, state) } -> std::same_as<void>; // void return type since we don't expect fail on send
+  { ds.read(storage, state) } -> std::same_as<int>; // return value: 0 is success, -1 is error, errno is ENOMSG, EAGAIN
+};
+
 template<typename DATA_STRUCTURE, int PERMISSIONS, typename ID = strval_t("")>
+requires shmem_data_structure<DATA_STRUCTURE>
 class shmem_data
 {
   void *buf;
