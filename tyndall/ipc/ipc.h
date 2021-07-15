@@ -45,11 +45,11 @@ using ipc_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ, ipc_id_prepare<ID>>
 #define create_ipc_reader(storage_type, id) (ipc_reader<storage_type, decltype(id ## _strval)>{})
 
 template<typename STORAGE, typename ID>
-int ipc_lazy_write(const STORAGE& entry, ID)
+void ipc_lazy_write(const STORAGE& entry, ID)
 {
   static ipc_writer<STORAGE, ID> writer;
 
-  return writer.write(entry);
+  writer.write(entry);
 }
 
 template<typename STORAGE, typename ID>

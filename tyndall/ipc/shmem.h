@@ -79,11 +79,12 @@ enum shmem_permission
   SHMEM_READ = 1<<0,
   SHMEM_WRITE = 1<<1,
 };
+
 template<typename DATA_STRUCTURE, int PERMISSIONS, typename ID = strval_t("")>
 class shmem_data
 {
   void *buf;
-  typename DATA_STRUCTURE::data data;
+  typename DATA_STRUCTURE::state state;
   typedef typename DATA_STRUCTURE::storage storage;
 
 public:
@@ -116,7 +117,7 @@ public:
     assert(rc == 0);
 
     // put type hash in the end for validation
-    auto hash_loc = reinterpret_cast<decltype(&type_hash)>(reinterpret_cast<DATA_STRUCTURE*>(buf) + 1);
+    auto hash_loc = reinterpret_cast<decltype(&type_hash)>(static_cast<DATA_STRUCTURE*>(buf) + 1);
     if (smp_cmp_xch(*hash_loc, 0, type_hash) == -1)
       assert(*hash_loc == type_hash);
   }
@@ -127,16 +128,16 @@ public:
       shmem_unmap(buf, sizeof(DATA_STRUCTURE));
   }
 
-  int write(const storage& entry) noexcept
+  void write(const storage& entry) noexcept
   {
     static_assert(PERMISSIONS & SHMEM_WRITE, "needs write permission");
-    return reinterpret_cast<DATA_STRUCTURE*>(buf)->write(entry, data);
+    static_cast<DATA_STRUCTURE*>(buf)->write(entry, state);
   }
 
   int read(storage& entry) noexcept
   {
     static_assert(PERMISSIONS & SHMEM_READ, "needs read permission");
-    return reinterpret_cast<DATA_STRUCTURE*>(buf)->read(entry, data);
+    return static_cast<DATA_STRUCTURE*>(buf)->read(entry, state);
   }
 
   // disable copy
@@ -146,9 +147,10 @@ public:
 
   shmem_data(shmem_data&& other)
     : buf(other.buf)
-    , data(other.data)
+    , state(other.state)
   {
     other.buf = NULL; // invalidate shared memory
   }
 };
+
 #endif

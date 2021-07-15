@@ -20,7 +20,7 @@ https://github.com/rigtorp/Seqlock
 #ifdef __cplusplus
 
 
-struct seq_lock_data
+struct seq_lock_state
 {
   int prev_seq = 0;
   bool has_read_once = false;
@@ -38,9 +38,9 @@ class seq_lock
 public:
 
   typedef STORAGE storage;
-  typedef seq_lock_data data;
+  typedef seq_lock_state state;
 
-  int write(const STORAGE& entry, seq_lock_data&)
+  void write(const STORAGE& entry, seq_lock_state&)
   {
     int seq = this->seq;
 
@@ -51,10 +51,9 @@ public:
 
     smp_wmb();
     smp_write_once(this->seq, ++seq);
-    return 0;
   }
 
-  int read(STORAGE& entry, seq_lock_data& data)
+  int read(STORAGE& entry, seq_lock_state& state)
   {
     int seq1, seq2, rc;
 
@@ -79,14 +78,14 @@ public:
       seq1 = seq2;
     }
 
-    if (seq2 != data.prev_seq)
+    if (seq2 != state.prev_seq)
     {
       rc = 0;
-      data.prev_seq = seq2;
-      if (!data.has_read_once)
-        data.has_read_once = true;
+      state.prev_seq = seq2;
+      if (!state.has_read_once)
+        state.has_read_once = true;
     }
-    else if ((seq2 == 0) && !data.has_read_once)
+    else if ((seq2 == 0) && !state.has_read_once)
     {
       rc = -1;
       errno = ENOMSG;

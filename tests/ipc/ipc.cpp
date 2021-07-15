@@ -34,8 +34,7 @@ int main()
   {
     {
       my_struct entry = ref;
-      int rc = ipc_write(entry, "/test/standard");
-      check(rc == 0);
+      ipc_write(entry, "/test/standard");
     }
 
     {
@@ -50,13 +49,13 @@ int main()
     my_struct entry = ref;
     check(ipc_read(entry, "/test/errors") == -1);
     check(errno == ENOMSG);
-    check(ipc_write(entry, "/test/errors") == 0);
+    ipc_write(entry, "/test/errors");
     check(ipc_read(entry, "/test/errors") == 0);
     check(ipc_read(entry, "/test/errors") == -1);
     check(errno == EAGAIN);
     check(ipc_read(entry, "/test/errors") == -1);
     check(errno == EAGAIN);
-    check(ipc_write(entry, "/test/errors") == 0);
+    ipc_write(entry, "/test/errors");
     check(ipc_read(entry, "/test/errors") == 0);
     check(ipc_read(entry, "/test/errors") == -1);
     check(errno == EAGAIN);
@@ -65,8 +64,7 @@ int main()
   {
     int rc = system(R"(python -c "
 from pytyndall import ipc_write_float, ipc_read_float
-rc = ipc_write_float(42, '/test/pytopic')
-assert rc == 0, 'write failed'
+ipc_write_float(42, '/test/pytopic')
 
 f = ipc_read_float('/test/pytopic')
 assert f == 42, 'got different value back'
@@ -78,8 +76,7 @@ assert f == 42, 'got different value back'
     {
       int rc = system(R"(python -c "
 from pytyndall import ipc_write_float, ipc_read_float
-rc = ipc_write_float(42, '/test/py2c++topic')
-assert rc == 0, 'write failed'
+ipc_write_float(42, '/test/py2c++topic')
     ")");
       check(rc == 0);
     }
@@ -92,25 +89,19 @@ assert rc == 0, 'write failed'
   }
 
   {
-    {
-      int rc = ipc_rtid_write(ref, "/test/rtid");
-      check(rc == 0);
-    }
+    ipc_rtid_write(ref, "/test/rtid");
 
-    {
-      my_struct entry;
-      int rc = ipc_rtid_read(entry, "/test/rtid");
-      check(rc == 0);
-      check(entry == ref);
-    }
+    my_struct entry;
+    int rc = ipc_rtid_read(entry, "/test/rtid");
+    check(rc == 0);
+    check(entry == ref);
   }
 
   {
     {
       //ipc_writer<my_struct, strval_t("test/mt_safe")> writer;
       auto writer = create_ipc_writer(my_struct, "test/mt_safe");
-      int rc = writer.write(ref);
-      check(rc == 0);
+      writer.write(ref);
     }
 
     {
@@ -126,8 +117,7 @@ assert rc == 0, 'write failed'
   {
     {
       auto writer = create_ipc_rtid_writer<my_struct>("test/rtid_mt_safe");
-      int rc = writer.write(ref);
-      check(rc == 0);
+      writer.write(ref);
     }
 
     {
