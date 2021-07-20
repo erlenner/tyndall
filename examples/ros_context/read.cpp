@@ -27,9 +27,10 @@ int main(int argc, char** argv)
     std_msgs::Int32 msg{};
 
 
-    ros_context_read(msg, "/ex_ros_context");
+    int rc = ros_context_read(msg, "/ex_ros_context");
 
-    printf("read: %d\n", msg.data);
+    if (rc == 0)
+      printf("read: %d\n", msg.data);
 
     std::this_thread::sleep_for(std::chrono::milliseconds{3});
   }
