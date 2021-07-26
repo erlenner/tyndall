@@ -14,10 +14,10 @@ namespace ros_context
   int init(int argc, char** argv, std::chrono::milliseconds loop_sleep = std::chrono::milliseconds{3}, const char *node_name = "default_node_name")
   { return 0;}
 }
-#define ros_context_read(msg, ...) do { (void)sizeof(msg); } while(0)
-#define ros_context_write(msg, ...) do { (void)sizeof(msg); } while(0)
-#define ros_context_serve(msg, ...) do { (void)sizeof(msg); } while(0)
-#define ros_context_call(msg, ...) do { (void)sizeof(msg); } while(0)
+#define ros_context_read(msg, ...) ({ (void)sizeof(msg); 0; })
+#define ros_context_write(msg, ...) ({ (void)sizeof(msg); 0; })
+#define ros_context_serve(msg, ...) ({ (void)sizeof(msg); 0; })
+#define ros_context_call(msg, ...) ({ (void)sizeof(msg); 0; })
 #else
 #include <ros/ros.h>
 
