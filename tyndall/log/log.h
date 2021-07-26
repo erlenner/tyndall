@@ -87,16 +87,6 @@ typedef enum { log_level_debug, log_level_info, log_level_warning, log_level_err
 
 const char* to_color_string(log_level_t lvl);
 
-// struct for recording the origin of the log function call
-typedef struct
-{
-  const char* file_name;
-  const char* function_name;
-  int line_number;
-  bool write_stdout;
-  bool write_file;
-} log_src_info_t;
-
   /*
     Reads the log level from the LOG_LEVEL environment variable.
     Optional global / fallback level first, then key-values of categories and debug level.
