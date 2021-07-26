@@ -14,10 +14,11 @@ namespace ros_context
   int init(int argc, char** argv, std::chrono::milliseconds loop_sleep = std::chrono::milliseconds{3}, const char *node_name = "default_node_name")
   { return 0;}
 }
-#define ros_context_read(msg, ...) ({ (void)sizeof(msg); 0; })
-#define ros_context_write(msg, ...) ({ (void)sizeof(msg); 0; })
-#define ros_context_serve(msg, ...) ({ (void)sizeof(msg); 0; })
-#define ros_context_call(msg, ...) ({ (void)sizeof(msg); 0; })
+#include <tyndall/ipc/ipc.h>
+#define ros_context_read(...) ({ ipc_read(__VA_ARGS__); })
+#define ros_context_write(...) ({ ipc_write(__VA_ARGS__); })
+#define ros_context_serve(...) ({ (void)sizeof(msg); 0; })
+#define ros_context_call(...) ({ (void)sizeof(msg); 0; })
 #else
 #include <ros/ros.h>
 
@@ -48,6 +49,13 @@ namespace ros_context
     assert(nh == NULL); // enforce single initialization per process
 
     ros::init(argc, argv, node_name); // node_name is usually overridden by launch file
+
+    // start roscore if it's not running
+    if (!ros::master::check() && (fork() == 0))
+    {
+      int rc = system("roscore");
+      assert(rc != -1);
+    }
 
     static ros::NodeHandle nh_instance("~");
     nh = &nh_instance;
@@ -125,13 +133,11 @@ namespace ros_context
   }
 
   template<typename Message, typename Id>
-  int lazy_write(const Message& msg, Id)
+  void lazy_write(const Message& msg, Id)
   {
     static ros::Publisher pub = nh->advertise<Message>(Id::c_str(), 1, true); // queue size 1 and latching
 
     pub.publish(msg);
-
-    return 0;
   }
 
 

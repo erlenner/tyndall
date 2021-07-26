@@ -18,7 +18,7 @@ struct my_struct
   }
 };
 
-my_struct ref
+const my_struct ref
 {
   .a = 3,
   .b = 1,
@@ -62,7 +62,7 @@ int main()
   }
 
   {
-    int rc = system(R"(python -c "
+    int rc = system(R"(python3 -c "
 from pytyndall import ipc_write_float, ipc_read_float
 ipc_write_float(42, '/test/pytopic')
 
@@ -74,7 +74,7 @@ assert f == 42, 'got different value back'
 
   {
     {
-      int rc = system(R"(python -c "
+      int rc = system(R"(python3 -c "
 from pytyndall import ipc_write_float, ipc_read_float
 ipc_write_float(42, '/test/py2c++topic')
     ")");

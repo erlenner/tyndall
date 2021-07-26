@@ -13,7 +13,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_definitions(-DDEBUG)
 
 include_directories(${CMAKE_SOURCE_DIR})
-set(LD_FLAGS "-lpthread -lzmq -lprotobuf -lfmt -lrt")
+set(LD_FLAGS "-lpthread -lzmq -lprotobuf -lrt")
 
 find_package(roscpp)
 
@@ -89,6 +89,7 @@ add_custom_target(tests COMMAND /bin/bash -c "${TEST_CMD}" VERBATIM DEPENDS ${CP
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(PythonLibs 3 REQUIRED)
 find_package(Boost COMPONENTS python REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 python_add_module(pytyndall py/pytyndall.cpp)
 include_directories(${Boost_INCLUDE_DIRS} ${Python_INCLUDE_DIRS})
 target_link_libraries(pytyndall tyndall ${LD_FLAGS} ${Boost_LIBRARIES} ${Python_LIBRARIES})
