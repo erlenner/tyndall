@@ -20,6 +20,12 @@ make install
 make examples
 ```
 
+### Build and run tests
+```
+make tests
+```
+(Tests won't get executed when cross compiling.)
+
 # Highlights
 
 ## meta/iterate
