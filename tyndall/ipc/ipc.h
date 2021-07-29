@@ -45,7 +45,7 @@ using ipc_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ, ipc_id_prepare<ID>>
 #define create_ipc_reader(storage_type, id) (ipc_reader<storage_type, decltype(id ## _strval)>{})
 
 template<typename STORAGE, typename ID>
-void ipc_lazy_write(const STORAGE& entry, ID)
+inline void ipc_lazy_write(const STORAGE& entry, ID)
 {
   static ipc_writer<STORAGE, ID> writer;
 
@@ -53,7 +53,7 @@ void ipc_lazy_write(const STORAGE& entry, ID)
 }
 
 template<typename STORAGE, typename ID>
-int ipc_lazy_read(STORAGE& entry, ID)
+inline int ipc_lazy_read(STORAGE& entry, ID)
 {
   static ipc_reader<STORAGE, ID> reader;
 
@@ -77,7 +77,7 @@ template<typename STORAGE>
 using ipc_rtid_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ>;
 
 template<typename STORAGE>
-std::string ipc_rtid_get_id(const char* id)
+inline std::string ipc_rtid_get_id(const char* id)
 {
   // remove leading slashes
   while (*id == '/')
@@ -93,21 +93,21 @@ std::string ipc_rtid_get_id(const char* id)
 }
 
 template<typename STORAGE>
-ipc_rtid_writer<STORAGE> create_ipc_rtid_writer(const char* id)
+inline ipc_rtid_writer<STORAGE> create_ipc_rtid_writer(const char* id)
 {
   std::string prepared_id = ipc_rtid_get_id<STORAGE>(id);
   return ipc_rtid_writer<STORAGE>{prepared_id.c_str()};
 }
 
 template<typename STORAGE>
-ipc_rtid_reader<STORAGE> create_ipc_rtid_reader(const char* id)
+inline ipc_rtid_reader<STORAGE> create_ipc_rtid_reader(const char* id)
 {
   std::string prepared_id = ipc_rtid_get_id<STORAGE>(id);
   return ipc_rtid_reader<STORAGE>{prepared_id.c_str()};
 }
 
 template<template<typename>typename TRANSPORT, typename STORAGE>
-TRANSPORT<STORAGE>& create_ipc_rtid_lazy(const char* id)
+inline TRANSPORT<STORAGE>& create_ipc_rtid_lazy(const char* id)
 {
   std::string prepared_id = ipc_rtid_get_id<STORAGE>(id);
 
@@ -134,7 +134,7 @@ TRANSPORT<STORAGE>& create_ipc_rtid_lazy(const char* id)
 
 #endif
 
-int ipc_cleanup()
+inline int ipc_cleanup()
 {
   return shmem_unlink_all(IPC_SHMEM_PREFIX);
 }
