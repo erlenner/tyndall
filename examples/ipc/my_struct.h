@@ -1,4 +1,5 @@
 
+/*
 typedef struct
 {
   struct
@@ -28,17 +29,18 @@ typedef struct
         ++(entry.data[i].iiii); \
       }                         \
     }while(0)
+*/
 
-/*
 typedef struct
 {
   int i;
+  float j;
 } my_struct;
 
-#define my_struct_print(print, s, ...) print("%d" __VA_ARGS__ , s.i)
+#define my_struct_print(print, s, ...) print("%d %f" __VA_ARGS__ , s.i, s.j)
 
 #define my_struct_inc(entry)    \
     do{                         \
       ++(entry.i);   \
+      ++(entry.j);   \
     }while(0)
-*/

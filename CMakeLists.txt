@@ -86,6 +86,18 @@ set(TEST_CMD "set -e; for t in ${CMAKE_BINARY_DIR}/${TEST_PREFIX}*; do $t; done"
 ENDIF()
 add_custom_target(tests COMMAND /bin/bash -c "${TEST_CMD}" VERBATIM DEPENDS ${CPP_TEST_TARGETS})
 
+set(TOOL_PREFIX "${CMAKE_PROJECT_NAME}_tool_")
+file(GLOB TOOLS "tools/*.c*")
+foreach(TOOL ${TOOLS})
+  execute_process(COMMAND bash "-c" "printf ${TOOL_PREFIX}$(basename ${TOOL} | cut -f 1 -d '.')" OUTPUT_VARIABLE TOOL_TARGET)
+  add_executable(${TOOL_TARGET} EXCLUDE_FROM_ALL ${TOOL})
+  target_link_libraries(${TOOL_TARGET} tyndall)
+  install(TARGETS ${TOOL_TARGET} DESTINATION bin OPTIONAL)
+  set(TOOL_TARGETS "${TOOL_TARGETS}${TOOL_TARGET};")
+endforeach(TOOL)
+add_custom_target(tools)
+add_dependencies(tools ${TOOL_TARGETS})
+
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(PythonLibs 3 REQUIRED)
 find_package(Boost COMPONENTS python REQUIRED)
