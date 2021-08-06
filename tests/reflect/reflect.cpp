@@ -1,6 +1,5 @@
 #include <tyndall/reflect/reflect.h>
 
-#include <type_traits>
 #include <string>
 
 int main()
@@ -9,14 +8,16 @@ int main()
   {
     struct S
     {
-      int floating_point;
-      float integer;
+      float floating_point;
+      int integer;
+      unsigned char unsigned_char = 5;
     };
 
     constexpr S s
     {
-      .floating_point = 42,
-      .integer = 3.14f,
+      .floating_point = 3.14f,
+      .integer = 42,
+      .unsigned_char = 255,
     };
 
     constexpr auto floating_point = reflect(s).get<0>();
@@ -25,15 +26,18 @@ int main()
     constexpr auto integer = reflect(s).get<1>();
     static_assert(integer == s.integer);
 
+    constexpr auto unsigned_char = reflect(s).get<2>();
+    static_assert(unsigned_char == s.unsigned_char);
+
     constexpr int size = reflect(s).size();
-    static_assert(size == 2);
+    static_assert(size == 3);
   }
 
   //{
   //  struct S
   //  {
-  //    int floating_point;
-  //    float integer;
+  //    float floating_point;
+  //    int integer;
   //    char c_string[5];
   //    std::string std_string;
   //    unsigned int unsigned_integer;
@@ -43,8 +47,8 @@ int main()
 
   //  constexpr S s
   //  {
-  //    .floating_point = -3111696,
-  //    .integer = 3.14,
+  //    .floating_point = 3.14,
+  //    .integer = -3111696,
   //    .c_string = {'h', 'e', 'i', '\0'},
   //    .std_string = "hei",
   //    .unsigned_integer = 3111696,
