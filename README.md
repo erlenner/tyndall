@@ -1,5 +1,7 @@
 # Tyndall
 
+[![tests](https://github.com/BluEye-Robotics/tyndall/actions/workflows/tests.yml/badge.svg)](https://github.com/BluEye-Robotics/tyndall/actions)
+
 Blueye Robotics open source c++ components
 
 ### Build
