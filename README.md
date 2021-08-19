@@ -157,3 +157,36 @@ while (1)
 }
 ```
 Full example in [examples/ipc/](examples/ipc/).
+
+### Read from command line
+
+The [ipc\_read](tools/ipc_read.cpp) tool can be used to print a topic, using the name or path:
+
+```shell
+tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic
+tyndall_tool_ipc_read /dev/shm/ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic
+```
+
+By default, this will only print the hexadecimal representation of the data stored in the shared memory.
+To format the data, you will need to supply the format yourself:
+
+```shell
+tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic f
+```
+
+The format is a list of type ids according to:
+```cpp
+i = int
+f = float
+s = string (null terminated)
+```
+
+So to print a struct `{ int a; float b, c; const char d[10];}` you would run:
+```shell
+tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic iffs
+```
+
+You can ignore a specified amount of bytes in the struct by having a number in the format:
+```shell
+tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic i8s
+```

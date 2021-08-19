@@ -125,7 +125,10 @@ int main(int argc, char** argv)
             }
           }
           if ((size_t)(b - buf) > buf_size)
-            printf("fmt is too large for buffer at %zu\n", buf_size);
+          {
+            printf("fmt is too large for buffer at %zu", buf_size);
+            break;
+          }
         }
         printf("\n");
       }
