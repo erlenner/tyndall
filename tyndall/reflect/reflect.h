@@ -6,9 +6,9 @@
 
 
 #ifndef REFLECT_MAX_FIELDS
-#define REFLECT_MAX_FIELDS 27
+#define REFLECT_MAX_FIELDS 10
 #endif
-static_assert(REFLECT_MAX_FIELDS < M_MAX_ARITHMETIC);
+static_assert(REFLECT_MAX_FIELDS <= M_MAX_ARITHMETIC, "REFLECT_MAX_FIELDS must be less than M_MAX_ARITHMETIC, specified in <tyndall/meta/macro.h>");
 
 template<size_t I>
 using size_t_ = std::integral_constant<size_t, I>;
@@ -37,5 +37,7 @@ M_EVAL(M_RANGE(REFLECT_I, 1, REFLECT_MAX_FIELDS))
 template<typename T>
 constexpr auto reflect(T&& t) noexcept
 {
-  return reflect_impl<T, size_t_<n_fields<T>()>{}>(std::forward<T>(t));
+  constexpr size_t number_of_fields = n_fields<T>();
+  static_assert(number_of_fields <= REFLECT_MAX_FIELDS, "Struct too large! Maybe increase REFLECT_MAX_FIELDS");
+  return reflect_impl<T, size_t_<number_of_fields>{}>(std::forward<T>(t));
 }
