@@ -1,5 +1,4 @@
 #include <tyndall/reflect/reflect.h>
-
 #include <string>
 
 int main()
@@ -33,28 +32,35 @@ int main()
     static_assert(size == 3);
   }
 
-  //{
-  //  struct S
-  //  {
-  //    float floating_point;
-  //    int integer;
-  //    char c_string[5];
-  //    std::string std_string;
-  //    unsigned int unsigned_integer;
-  //    unsigned char unsigned_char;
-  //    char signed_char;
-  //  };
+  {
+    struct S
+    {
+      float floating_point;
+      int integer;
+      std::string std_string;
+      int another_integer;
+      unsigned int unsigned_integer;
+      unsigned char unsigned_char;
+      char signed_char;
+    };
 
-  //  constexpr S s
-  //  {
-  //    .floating_point = 3.14,
-  //    .integer = -3111696,
-  //    .c_string = {'h', 'e', 'i', '\0'},
-  //    .std_string = "hei",
-  //    .unsigned_integer = 3111696,
-  //    .unsigned_char = 42,
-  //    .signed_char = -42,
-  //  };
-  //}
+    S s
+    {
+      .floating_point = 3.14f,
+      .integer = -3111696,
+      .std_string = "hei",
+      .another_integer = 5,
+      .unsigned_integer = 3111696,
+      .unsigned_char = 42,
+      .signed_char = -42,
+    };
+
+    constexpr int size = reflect(s).size();
+    static_assert(size == 7);
+  }
+
+  //#define PI(i, _) int M_CAT(a, i) = i;
+  //#define PR(i, _) { M_RANGE(PI, 0, M_INC(i)) printf("hei %d\n", M_CAT(a, )); }
+  //M_EVAL(M_RANGE(PR, 0, 3))
 
 }
