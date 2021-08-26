@@ -13,7 +13,6 @@ int main()
       std::string ss;
     };
 
-    //constexpr S s{1, 2, 3};
     S s;
 
     static_assert(n_fields<decltype(s)>() == 4);
