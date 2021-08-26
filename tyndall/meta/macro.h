@@ -4,6 +4,9 @@
 // http://saadahmad.ca/cc-preprocessor-metaprogramming-basic-pattern-matching-macros-and-conditionals/
 // https://github.com/pfultz2/Cloak/wiki/C-Preprocessor-tricks,-tips,-and-idioms#deferred-expression
 
+
+#define M_MAX_ARITHMETIC 126 // Max number to be used in arithmetic
+
 #define M_EMPTY() 
 #define M_DEFER(...) __VA_ARGS__ M_EMPTY()
 #define M_DEFER2(...) __VA_ARGS__ M_DEFER(M_EMPTY) ()

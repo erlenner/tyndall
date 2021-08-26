@@ -28,7 +28,7 @@ int main()
     constexpr auto unsigned_char = reflect(s).get<2>();
     static_assert(unsigned_char == s.unsigned_char);
 
-    constexpr int size = reflect(s).size();
+    constexpr size_t size = reflect(s).size();
     static_assert(size == 3);
   }
 
@@ -44,23 +44,9 @@ int main()
       char signed_char;
     };
 
-    S s
-    {
-      .floating_point = 3.14f,
-      .integer = -3111696,
-      .std_string = "hei",
-      .another_integer = 5,
-      .unsigned_integer = 3111696,
-      .unsigned_char = 42,
-      .signed_char = -42,
-    };
-
-    constexpr int size = reflect(s).size();
+    S s;
+    constexpr size_t size = reflect(s).size();
     static_assert(size == 7);
   }
-
-  //#define PI(i, _) int M_CAT(a, i) = i;
-  //#define PR(i, _) { M_RANGE(PI, 0, M_INC(i)) printf("hei %d\n", M_CAT(a, )); }
-  //M_EVAL(M_RANGE(PR, 0, 3))
 
 }
