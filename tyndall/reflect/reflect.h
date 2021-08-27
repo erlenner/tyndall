@@ -14,6 +14,12 @@ static_assert(M_INC(REFLECT_MAX_FIELDS) < M_MAX_ARITHMETIC, "REFLECT_MAX_FIELDS 
 template<size_t I>
 using size_t_ = std::integral_constant<size_t, I>;
 
+template<typename T, size_t_<0>>
+constexpr auto reflect_impl(T&& t) noexcept
+{
+  return reflection<>{};
+}
+
 #define REFLECT_BINDING(I, _) M_CAT(a, I)
 #define REFLECT_DECLTYPE_BINDING(I, _) decltype(M_CAT(a, I))
 #define REFLECT_FORWARD_DECLTYPE_BINDING(I, _) std::forward<decltype(M_CAT(a, I))>(M_CAT(a, I))
@@ -28,7 +34,7 @@ constexpr auto reflect_impl(T&& t) noexcept \
 M_EVAL(M_RANGE(REFLECT_I, 1, M_INC(REFLECT_MAX_FIELDS)))
 
 // The range above produces items like the following (for I=3):
-//template<typename T, int_<3>>
+//template<typename T, size_t_<3>>
 //constexpr auto reflect_impl(T&& t) noexcept
 //{
 //  auto&& [a0, a1, a2] = t;
