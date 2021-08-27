@@ -1,5 +1,6 @@
 #include <tyndall/reflect/reflect.h>
 #include <string>
+#include <typeinfo>
 
 int main()
 {
@@ -33,6 +34,8 @@ int main()
   }
 
   {
+    struct A{int a; int b;};
+
     struct S
     {
       float floating_point;
@@ -42,11 +45,14 @@ int main()
       unsigned int unsigned_integer;
       unsigned char unsigned_char;
       char signed_char;
+      A a;
     };
 
     S s;
     constexpr size_t size = reflect(s).size();
-    static_assert(size == 7);
+    static_assert(size == 8);
+
+    static_assert(reflect(s).get_format() == "fiSijhcii"_strval);
   }
 
 }

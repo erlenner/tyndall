@@ -1,3 +1,4 @@
+#pragma once
 #include <type_traits>
 #include <cstddef>
 #include <tyndall/meta/macro.h>
@@ -37,7 +38,11 @@ M_EVAL(M_RANGE(REFLECT_I, 1, REFLECT_MAX_FIELDS))
 template<typename T>
 constexpr auto reflect(T&& t) noexcept
 {
-  constexpr size_t number_of_fields = n_fields<T>();
+  using type = std::remove_cv_t<T>;
+
+  static_assert(!std::is_union_v<type>, "unions are not supported");
+
+  constexpr size_t number_of_fields = n_fields<type>();
   static_assert(number_of_fields <= REFLECT_MAX_FIELDS, "Struct too large! Maybe increase REFLECT_MAX_FIELDS");
-  return reflect_impl<T, size_t_<number_of_fields>{}>(std::forward<T>(t));
+  return reflect_impl<type, size_t_<number_of_fields>{}>(std::forward<type>(t));
 }

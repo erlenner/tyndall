@@ -1,3 +1,4 @@
+#pragma once
 #include <type_traits>
 #include <utility>
 #include <climits>
@@ -49,6 +50,15 @@ namespace nfields_detail
   template <class T, size_t N, typename = decltype(constructible<T>(make_index_sequence<N>()))>
   using constructible_t = size_t;
 
+
+  // n_fields_impl is overloaded with long and int to avoid multiple definitions
+  //template<typename T, size_t N>
+  //constexpr auto n_fields_impl(long long) noexcept
+  //  -> typename std::enable_if_t<std::is_array_v<T>, size_t>
+  //{
+  //  return sizeof(T) / sizeof(typename std::remove_all_extents_t<T>);
+  //}
+
   // n_fields_impl is overloaded with long and int to avoid multiple definitions
   template<typename T, size_t N>
   constexpr auto n_fields_impl(long) noexcept -> constructible_t<T, N>
@@ -59,7 +69,7 @@ namespace nfields_detail
   template<typename T, size_t N>
   constexpr size_t n_fields_impl(int) noexcept
   {
-    return n_fields_impl<T, N-1>(0L);
+    return n_fields_impl<T, N-1>(0l);
   }
 }
 
@@ -72,5 +82,5 @@ constexpr size_t n_fields() noexcept
 
   static_assert(std::is_aggregate<type>::value || std::is_scalar<type>::value, "T must be aggregate initializable");
 
-  return nfields_detail::n_fields_impl<type, max_field_count>(0L);
+  return nfields_detail::n_fields_impl<type, max_field_count>(0l);
 }
