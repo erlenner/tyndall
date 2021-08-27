@@ -7,7 +7,7 @@
 
 // heavy borrowing from https://github.com/apolukhin/pfr_non_boost/blob/master/include/pfr/detail/fields_count.hpp
 
-namespace nfields_detail
+namespace n_fields_detail
 {
   template<size_t... I>
   using index_sequence = std::integer_sequence<size_t, I...>;
@@ -59,17 +59,28 @@ namespace nfields_detail
   //  return sizeof(T) / sizeof(typename std::remove_all_extents_t<T>);
   //}
 
-  // n_fields_impl is overloaded with long and int to avoid multiple definitions
   template<typename T, size_t N>
-  constexpr auto n_fields_impl(long) noexcept -> constructible_t<T, N>
+  constexpr auto n_fields_linear(long) noexcept -> constructible_t<T, N>
   {
     return N;
   }
 
   template<typename T, size_t N>
-  constexpr size_t n_fields_impl(int) noexcept
+  constexpr size_t n_fields_linear(int) noexcept
   {
-    return n_fields_impl<T, N-1>(0l);
+    return n_fields_linear<T, N-1>(0l);
+  }
+
+  template<typename T, size_t N>
+  constexpr auto n_fields_binary(long) noexcept -> constructible_t<T, N>
+  {
+    return N;
+  }
+
+  template<typename T, size_t N>
+  constexpr size_t n_fields_binary(int) noexcept
+  {
+    return n_fields_binary<T, N/2>(0l);
   }
 }
 
@@ -82,5 +93,8 @@ constexpr size_t n_fields() noexcept
 
   static_assert(std::is_aggregate<type>::value || std::is_scalar<type>::value, "T must be aggregate initializable");
 
-  return nfields_detail::n_fields_impl<type, max_field_count>(0l);
+  // Binary search is applied to avoid too large template depth.
+  constexpr size_t binary_search = n_fields_detail::n_fields_binary<type, max_field_count>(0l);
+
+  return n_fields_detail::n_fields_linear<type, binary_search * 2 + 1>(0l);
 }

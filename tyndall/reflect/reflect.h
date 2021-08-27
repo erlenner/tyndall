@@ -7,9 +7,9 @@
 
 
 #ifndef REFLECT_MAX_FIELDS
-#define REFLECT_MAX_FIELDS 10
+#define REFLECT_MAX_FIELDS 30
 #endif
-static_assert(REFLECT_MAX_FIELDS <= M_MAX_ARITHMETIC, "REFLECT_MAX_FIELDS must be less than M_MAX_ARITHMETIC, specified in <tyndall/meta/macro.h>");
+static_assert(M_INC(REFLECT_MAX_FIELDS) < M_MAX_ARITHMETIC, "REFLECT_MAX_FIELDS must be less than M_MAX_ARITHMETIC, specified in <tyndall/meta/macro.h>");
 
 template<size_t I>
 using size_t_ = std::integral_constant<size_t, I>;
@@ -25,7 +25,7 @@ constexpr auto reflect_impl(T&& t) noexcept \
   auto&& [ M_RANGE_WITH_COMMA(REFLECT_BINDING, 0, I) ] = t; \
   return reflection<M_RANGE_WITH_COMMA(REFLECT_DECLTYPE_BINDING, 0, I)>{M_RANGE_WITH_COMMA(REFLECT_FORWARD_DECLTYPE_BINDING, 0,I)}; \
 }
-M_EVAL(M_RANGE(REFLECT_I, 1, REFLECT_MAX_FIELDS))
+M_EVAL(M_RANGE(REFLECT_I, 1, M_INC(REFLECT_MAX_FIELDS)))
 
 // The range above produces items like the following (for I=3):
 //template<typename T, int_<3>>
