@@ -1,6 +1,7 @@
 #include <tyndall/reflect/reflect.h>
 #include <string>
 #include <typeinfo>
+#include <array>
 
 int main()
 {
@@ -40,19 +41,23 @@ int main()
     {
       float floating_point;
       int integer;
-      std::string std_string;
+      //std::string std_string;
       int another_integer;
       unsigned int unsigned_integer;
       unsigned char unsigned_char;
       char signed_char;
       A a;
+      std::array<unsigned int, 3> b;
     };
 
-    S s;
+    constexpr S s{};
     constexpr size_t size = reflect(s).size();
     static_assert(size == 8);
 
-    static_assert(reflect(s).get_format() == "fiSijhcii"_strval);
+    constexpr auto b = reflect(s).get<7>();
+    static_assert(std::is_same_v<std::remove_cv_t<decltype(b)>, std::remove_cv_t<decltype(s.b)>>);
+
+    static_assert(reflect(s).get_format() == "fiijhciijjj"_strval);
   }
 
 }

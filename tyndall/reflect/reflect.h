@@ -44,7 +44,7 @@ M_EVAL(M_RANGE(REFLECT_I, 1, M_INC(REFLECT_MAX_FIELDS)))
 template<typename T>
 constexpr auto reflect(T&& t) noexcept
 {
-  using type = std::remove_cv_t<T>;
+  using type = T;
 
   static_assert(!std::is_union_v<type>, "unions are not supported");
 

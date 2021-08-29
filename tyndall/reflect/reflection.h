@@ -23,17 +23,17 @@ struct reflection<Lhs, Rhs...> : public reflection<Rhs...>
   {}
 
   template<size_t index>
-  constexpr auto get() noexcept
+  constexpr const auto& get() const noexcept
   {
     return get_impl<index>(*this);
   }
 
-  constexpr size_t size() noexcept
+  static constexpr size_t size() noexcept
   {
     return 1 + sizeof...(Rhs);
   }
 
-  constexpr auto get_format() noexcept
+  constexpr auto get_format() const noexcept
   {
     constexpr auto lhs_format = ::get_format<std::remove_cv_t<Lhs>>();
 
@@ -52,7 +52,7 @@ protected:
   }
 
   template<size_t index, typename = std::enable_if_t<0 < index>>
-  static constexpr auto get_impl(const reflection<Lhs, Rhs...>& refl) noexcept
+  static constexpr const auto& get_impl(const reflection<Lhs, Rhs...>& refl) noexcept
   {
     return reflection<Rhs...>::template get_impl<index-1>(static_cast<const reflection<Rhs...>&>(refl));
   }
@@ -62,21 +62,12 @@ template<>
 struct reflection<>
 {
 public:
-  explicit constexpr reflection() noexcept
-  {}
-
-  template<size_t index>
-  static constexpr size_t get_impl(const reflection<>& refl) noexcept
-  {
-    return -1;
-  }
-
-  constexpr size_t size() noexcept
+  static constexpr size_t size() noexcept
   {
     return 0;
   }
 
-  constexpr auto get_format() noexcept
+  static constexpr auto get_format() noexcept
   {
     return ""_strval;
   }
