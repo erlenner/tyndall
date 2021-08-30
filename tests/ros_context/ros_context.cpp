@@ -39,4 +39,8 @@ int main()
       check(entry == ref);
     }
   }
+
+#ifdef NO_ROS
+  ipc_cleanup();
+#endif
 }

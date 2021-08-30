@@ -1,24 +1,16 @@
+#pragma once
 #include <type_traits>
 #include <utility>
+
+#include "tyndall/meta/strval.h"
+#include "print_format.h"
+
+template<typename T>
+constexpr auto reflect_aggregate() noexcept;
 
 template<typename... Args>
 struct reflection
 {};
-
-namespace detail
-{
-  template<int index, typename Lhs, typename... Rhs, typename = std::enable_if_t<index == 0>>
-  static constexpr const Lhs& reflect_get(const reflection<Lhs, Rhs...>& refl) noexcept
-  {
-    return refl.lhs;
-  }
-  
-  template<int index, typename Lhs, typename... Rhs, typename = std::enable_if_t<0 < index>>
-  static constexpr auto reflect_get(const reflection<Lhs, Rhs...>& refl) noexcept -> decltype(reflect_get<index-1>(static_cast<const reflection<Rhs...>&>(refl)))
-  {
-    return reflect_get<index-1>(static_cast<const reflection<Rhs...>&>(refl));
-  }
-}
 
 template<typename Lhs, typename... Rhs>
 struct reflection<Lhs, Rhs...> : public reflection<Rhs...>
@@ -30,30 +22,57 @@ struct reflection<Lhs, Rhs...> : public reflection<Rhs...>
   , lhs(lhs)
   {}
 
-  template<int index>
-  constexpr auto get() noexcept
+  template<size_t index>
+  constexpr const auto& get() const noexcept
   {
-    return detail::reflect_get<index>(*this);
+    return get_impl<index>(*this);
   }
 
-  constexpr int size() noexcept
+  static constexpr size_t size() noexcept
   {
     return 1 + sizeof...(Rhs);
   }
 
+  static constexpr auto get_format() noexcept
+  {
+    constexpr auto lhs_format = ::print_format_typeid<std::remove_cvref_t<Lhs>>();
+
+    constexpr auto rhs_format = reflection<Rhs...>::get_format();
+
+    if constexpr(lhs_format == ""_strval)
+      return reflect_aggregate<Lhs>().get_format() + rhs_format;
+    else
+      return lhs_format + rhs_format;
+  }
+
 protected:
 
+  template<size_t index, typename = std::enable_if_t<index == 0>>
+  static constexpr const Lhs& get_impl(const reflection<Lhs, Rhs...>& refl) noexcept
+  {
+    return refl.lhs;
+  }
+
+  template<size_t index, typename = std::enable_if_t<0 < index>>
+  static constexpr const auto& get_impl(const reflection<Lhs, Rhs...>& refl) noexcept
+  {
+    return reflection<Rhs...>::template get_impl<index-1>(static_cast<const reflection<Rhs...>&>(refl));
+  }
 };
 
 template<>
 struct reflection<>
 {
 public:
-  explicit constexpr reflection() noexcept
-  {}
-
-  constexpr int size() noexcept
+  static constexpr size_t size() noexcept
   {
     return 0;
   }
+
+  static constexpr auto get_format() noexcept
+  {
+    return ""_strval;
+  }
 };
+
+#include "reflect.h"

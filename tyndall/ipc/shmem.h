@@ -5,9 +5,6 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <string.h>
-#include <typeinfo>
-#include <typeindex>
-#include <tyndall/meta/strval.h>
 
 enum shmem_error
 {
@@ -72,7 +69,12 @@ static inline int shmem_unlink_all(const char *prefix)
 #include <type_traits>
 #include <concepts>
 #include <assert.h>
+#include <typeindex>
+#include <type_traits>
+#include <tyndall/meta/strval.h>
+#include <tyndall/meta/macro.h>
 #include <tyndall/meta/typeinfo.h>
+#include <tyndall/reflect/reflect.h>
 #include "smp.h"
 
 enum shmem_permission
@@ -114,22 +116,33 @@ public:
     init(id);
   }
 
+  DATA_STRUCTURE& data_structure() noexcept { return *static_cast<DATA_STRUCTURE*>(buf); }
+
   void init(const char *id) noexcept
   {
-    //static_assert(type_info_hash(DATA_STRUCTURE) == 0);
-    //printf("%u\n\n", type_info_hash(DATA_STRUCTURE));
-
     constexpr auto type_hash = type_info_hash(DATA_STRUCTURE);
+    constexpr auto debug_format = reflect<typename DATA_STRUCTURE::storage>().get_format();
 
-    constexpr int size = sizeof(DATA_STRUCTURE) + sizeof(type_hash);
+    struct {
+      std::remove_cv_t<decltype(type_hash)> th = type_hash;
+      std::remove_cv_t<decltype(debug_format)> df = debug_format;
+    } tailer;
+
+    constexpr int size = sizeof(DATA_STRUCTURE) + sizeof(tailer);
     int rc = shmem_create(&buf, id, size);
-
     assert(rc == 0);
 
-    // put type hash in the end for validation
-    auto hash_loc = reinterpret_cast<decltype(&type_hash)>(static_cast<DATA_STRUCTURE*>(buf) + 1);
-    if (smp_cmp_xch(*hash_loc, 0, type_hash) == -1)
-      assert(*hash_loc == type_hash);
+    // shared memory should be page aligned:
+    assert(getpagesize() % CACHELINE_BYTES == 0);
+    assert(reinterpret_cast<uintptr_t>(buf) % CACHELINE_BYTES == 0);
+
+    // put type tailer in the end for validation
+    static_assert(sizeof(tailer) < CACHELINE_BYTES, "tailer needs to fit in a single section, as aligned by " M_STRINGIFY(CACHELINE_BYTES));
+    auto tailer_loc = reinterpret_cast<decltype(tailer)*>(&data_structure() + 1);
+    if (smp_cmp_xch(tailer_loc->th, 0, type_hash) == -1)
+      assert(tailer_loc->th == type_hash);
+
+    tailer_loc->df = {}; // store debug format string
   }
 
   ~shmem_data() noexcept
@@ -141,13 +154,13 @@ public:
   void write(const storage& entry) noexcept
   {
     static_assert(PERMISSIONS & SHMEM_WRITE, "needs write permission");
-    static_cast<DATA_STRUCTURE*>(buf)->write(entry, state);
+    data_structure().write(entry, state);
   }
 
   int read(storage& entry) noexcept
   {
     static_assert(PERMISSIONS & SHMEM_READ, "needs read permission");
-    return static_cast<DATA_STRUCTURE*>(buf)->read(entry, state);
+    return data_structure().read(entry, state);
   }
 
   // disable copy

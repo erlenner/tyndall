@@ -13,14 +13,61 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string>
 #include <tyndall/ipc/smp.h>
-#include <examples/ipc/my_struct.h>
+#include <tyndall/reflect/print_format.h>
+
+void print(char* fmt, const char* buf, size_t buf_size)
+{
+  const char* b = buf;
+  for (char* f = fmt; (*f!='\0'); ++f)
+  {
+    if (isdigit(*f))
+    {
+      long num = strtol(f, &f, 10);
+      printf("<%ld>, ", num);
+      b += num;
+    }
+
+    size_t printed = print_format(*f, b);
+    if (printed == 0)
+    {
+      switch(*f)
+      {
+        case 's':
+          printf("%ss, ", b);
+          printed = strlen(b);
+          b += printed;
+          break;
+        case 'S':
+          // assumes sso optimized std::string
+          printf("%ss, ", reinterpret_cast<const std::string*>(b)->c_str());
+          printed = sizeof(std::string);
+          b += printed;
+          break;
+        default:
+          printf("error, wrong parameter: %c\n", *f);
+      }
+      if (printed == 0)
+        break;
+    }
+    else
+    {
+      printf(",\t");
+      b += printed;
+    }
+
+    if ((size_t)(b - buf) > buf_size)
+    {
+      printf("fmt is too large for buffer at %zu", buf_size);
+      break;
+    }
+  }
+  printf("\n");
+}
 
 int main(int argc, char** argv)
 {
-  //printf("%s\n", typeid(unsigned char).name());
-  printf("my_struct: %s\n", typeid(my_struct).name());
-
   if (argc < 2)
   {
     printf("Usage: %s <ipc_name> <format>\n", argv[0]);
@@ -47,13 +94,23 @@ int main(int argc, char** argv)
     ipc_size = st.st_size;
   }
 
-  void* mapped = mmap(NULL, ipc_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  void* const mapped = mmap(NULL, ipc_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   assert(mapped != MAP_FAILED);
+  assert(reinterpret_cast<uintptr_t>(mapped) % CACHELINE_BYTES == 0);
 
   int& ipc_seq = *(int*)mapped;
-  const char* ipc_buf = (const char*)mapped + sizeof(ipc_seq);
+  const char* const ipc_buf = (const char*)mapped + sizeof(ipc_seq);
   const size_t buf_size = ipc_size - 2*sizeof(int);
-  char* buf = (char*)malloc(buf_size);
+  char* buf = (char*)malloc(buf_size + CACHELINE_BYTES);
+  char* const buf_to_free = buf;
+
+  // align buf
+  {
+    constexpr size_t alignment = CACHELINE_BYTES;
+    size_t alignment_error = reinterpret_cast<uintptr_t>(buf) % alignment;
+    if (alignment_error > 0)
+      buf += alignment - alignment_error;
+  }
 
   int seq = 0;
   while(1)
@@ -97,54 +154,36 @@ int main(int argc, char** argv)
       if (argc > 2)
       {
         char* fmt = argv[2];
-        const char* b = buf;
-        for (char* f = fmt; (*f!='\0'); ++f)
-        {
-          if (isdigit(*f))
-          {
-            long num = strtol(f, &f, 10);
-            printf("<%ld>, ", num);
-            b += num;
-          }
-
-          {
-            switch(*f)
-            {
-              case 'i':
-                printf("%di, ", *(int*)b);
-                b += sizeof(int);
-                break;
-              case 'f':
-                printf("%ff, ", *(float*)b);
-                b += sizeof(float);
-                break;
-              case 's':
-                printf("%ss, ", b);
-                b += strlen(b);
-                break;
-            }
-          }
-          if ((size_t)(b - buf) > buf_size)
-          {
-            printf("fmt is too large for buffer at %zu", buf_size);
-            break;
-          }
-        }
-        printf("\n");
+        print(fmt, buf, buf_size);
       }
       else
       {
-        for (size_t i=0; i<buf_size; ++i)
-          printf("%02x", buf[i]);
-        printf("\n");
-        //printf("int: %d\n", *(int*)buf);
+        // extract debug format
+        constexpr int type_info_hash_size = 4;
+        const size_t debug_tail_size = ipc_size % CACHELINE_BYTES;
+
+        if (debug_tail_size > type_info_hash_size)
+        {
+          const size_t debug_format_size = debug_tail_size - type_info_hash_size;
+          char* const debug_format_loc = static_cast<char*>(mapped) + ipc_size - debug_format_size;
+
+          char* fmt = debug_format_loc;
+          print(fmt, buf, buf_size);
+        }
+        else
+        {
+          for (size_t i=0; i<buf_size; ++i)
+            printf("%02x", buf[i]);
+          printf("\n");
+          //printf("int: %d\n", *(int*)buf);
+        }
       }
     }
     else
       usleep(1000);
   }
 
-  free(buf);
+  free(buf_to_free);
 
   {
     int rc = munmap(mapped, ipc_size);
