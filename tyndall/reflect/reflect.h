@@ -6,6 +6,8 @@
 #include "reflection.h"
 #include "n_fields.h"
 
+// based on https://github.com/apolukhin/pfr_non_boost/blob/91f801bb08cf817c640d9c6d57ddfad5f38de92d/include/pfr/detail/core17_generated.hpp
+// , with license: https://github.com/apolukhin/pfr_non_boost/blob/91f801bb08cf817c640d9c6d57ddfad5f38de92d/LICENSE_1_0.txt
 
 #ifndef REFLECT_MAX_FIELDS
 #define REFLECT_MAX_FIELDS 30
