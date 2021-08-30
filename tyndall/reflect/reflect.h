@@ -20,19 +20,6 @@ constexpr auto reflect_impl(T&& t, size_t_<0>) noexcept
   return reflection<>{};
 }
 
-template<typename T>
-constexpr auto reflect_impl(T&& t, size_t_<1>, std::enable_if_t<!std::is_class_v<std::remove_cvref_t<T>>>* = 0) noexcept
-{
-  return reflection<decltype(t)>{std::forward<T>(t)};
-}
-
-template<typename T>
-constexpr auto reflect_impl(T&& t, size_t_<1>, std::enable_if_t<std::is_class_v<std::remove_cvref_t<T>>>* = 0) noexcept
-{
-  auto&& [a0] = t;
-  return reflection<decltype(a0)>{std::forward<decltype(a0)>(a0)};
-}
-
 #define REFLECT_BINDING(I, _) M_CAT(a, I)
 #define REFLECT_DECLTYPE_BINDING(I, _) decltype(M_CAT(a, I))
 #define REFLECT_FORWARD_DECLTYPE_BINDING(I, _) std::forward<decltype(M_CAT(a, I))>(M_CAT(a, I))
@@ -44,7 +31,7 @@ constexpr auto reflect_impl(T&& t, size_t_<I>) noexcept \
   auto&& [ M_RANGE_WITH_COMMA(REFLECT_BINDING, 0, I) ] = t; \
   return reflection<M_RANGE_WITH_COMMA(REFLECT_DECLTYPE_BINDING, 0, I)>{M_RANGE_WITH_COMMA(REFLECT_FORWARD_DECLTYPE_BINDING, 0,I)}; \
 }
-M_EVAL(M_RANGE(REFLECT_I, 2, M_INC(REFLECT_MAX_FIELDS)))
+M_EVAL(M_RANGE(REFLECT_I, 1, M_INC(REFLECT_MAX_FIELDS)))
 
 // The range above produces items like the following (for I=3):
 //template<typename T>
@@ -62,9 +49,24 @@ constexpr reflection<> reflect_impl(T&&, size_t_<I>) noexcept
 }
 
 template<typename T>
-constexpr auto reflect(T&& t) noexcept
+constexpr auto reflect_scalar(T&& t, std::enable_if_t<!std::is_class_v<std::remove_cvref_t<T>>>* = 0) noexcept
 {
-  using type = T;
+  static_assert(std::is_scalar_v<std::remove_cvref_t<T>>, "T must be scalar");
+  return reflection<decltype(t)>{std::forward<T>(t)};
+}
+
+template<typename T>
+constexpr auto reflect_scalar(T&& t, std::enable_if_t<std::is_class_v<std::remove_cvref_t<T>>>* = 0) noexcept
+{
+  auto&& [a0] = t;
+  return reflection<decltype(a0)>{std::forward<decltype(a0)>(a0)};
+}
+
+
+template<typename T>
+constexpr auto reflect_aggregate(T&& t) noexcept
+{
+  using type = const std::remove_cvref_t<T>;
 
   static_assert(!std::is_union_v<type>, "unions are not supported");
 
@@ -74,9 +76,28 @@ constexpr auto reflect(T&& t) noexcept
 }
 
 template<typename T>
+constexpr auto reflect_aggregate() noexcept
+{
+  static_assert(std::is_aggregate_v<std::remove_cvref_t<T>>, "T must be aggregate");
+
+  return reflect_aggregate(T{});
+}
+
+template<typename T>
+constexpr auto reflect(T&& t) noexcept
+{
+  if constexpr(n_fields<T>() == 1)
+    return reflect_scalar<T>(std::forward<T>(t));
+  else
+    return reflect_aggregate(std::forward<T>(t));
+}
+
+template<typename T>
 constexpr auto reflect() noexcept
 {
-  static_assert(std::is_aggregate<T>::value || std::is_scalar<T>::value, "T must be aggregate initializable");
+  using type = std::remove_cvref_t<T>;
+
+  static_assert(std::is_aggregate_v<type> || std::is_scalar_v<type>, "T must be aggregate initializable");
 
   return reflect(T{});
 }

@@ -6,7 +6,7 @@
 #include "print_format.h"
 
 template<typename T>
-constexpr auto reflect(T&& t) noexcept;
+constexpr auto reflect_aggregate() noexcept;
 
 template<typename... Args>
 struct reflection
@@ -33,14 +33,16 @@ struct reflection<Lhs, Rhs...> : public reflection<Rhs...>
     return 1 + sizeof...(Rhs);
   }
 
-  constexpr auto get_format() const noexcept
+  static constexpr auto get_format() noexcept
   {
-    constexpr auto lhs_format = ::print_format_typeid<std::remove_cv_t<Lhs>>();
+    constexpr auto lhs_format = ::print_format_typeid<std::remove_cvref_t<Lhs>>();
+
+    constexpr auto rhs_format = reflection<Rhs...>::get_format();
 
     if constexpr(lhs_format == ""_strval)
-      return reflect(lhs).get_format() + reflection<Rhs...>::get_format();
+      return reflect_aggregate<Lhs>().get_format() + rhs_format;
     else
-      return lhs_format + reflection<Rhs...>::get_format();
+      return lhs_format + rhs_format;
   }
 
 protected:
