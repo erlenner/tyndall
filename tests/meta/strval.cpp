@@ -5,6 +5,9 @@ int main()
 {
   constexpr auto hei = "hei"_strval;
   decltype(hei)::c_str();
+  static_assert(hei.get<0>() == 'h');
+  static_assert(hei.get<1>() == 'e');
+  static_assert(hei.get<2>() == 'i');
   static_assert(hei.length() == 3);
   static_assert(hei + "du"_strval == "heidu"_strval);
   static_assert(("hei din sei"_strval).occurrences('i') == 3);

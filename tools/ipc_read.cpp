@@ -14,13 +14,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <tyndall/ipc/smp.h>
-#include <examples/ipc/my_struct.h>
+#include <tyndall/reflect/print_format.h>
 
 int main(int argc, char** argv)
 {
-  //printf("%s\n", typeid(unsigned char).name());
-  printf("my_struct: %s\n", typeid(my_struct).name());
-
   if (argc < 2)
   {
     printf("Usage: %s <ipc_name> <format>\n", argv[0]);
@@ -53,7 +50,16 @@ int main(int argc, char** argv)
   int& ipc_seq = *(int*)mapped;
   const char* ipc_buf = (const char*)mapped + sizeof(ipc_seq);
   const size_t buf_size = ipc_size - 2*sizeof(int);
-  char* buf = (char*)malloc(buf_size);
+  char* buf = (char*)malloc(buf_size + CACHELINE_BYTES);
+  char* buf_to_free = buf;
+
+  // align buf
+  {
+    constexpr size_t alignment = CACHELINE_BYTES;
+    size_t alignment_error = reinterpret_cast<uintptr_t>(buf) % alignment;
+    if (alignment_error > 0)
+      buf += alignment - alignment_error;
+  }
 
   int seq = 0;
   while(1)
@@ -107,23 +113,34 @@ int main(int argc, char** argv)
             b += num;
           }
 
+          size_t printed = print_format(*f, b);
+          if (printed == 0)
           {
             switch(*f)
             {
-              case 'i':
-                printf("%di, ", *(int*)b);
-                b += sizeof(int);
-                break;
-              case 'f':
-                printf("%ff, ", *(float*)b);
-                b += sizeof(float);
-                break;
               case 's':
                 printf("%ss, ", b);
-                b += strlen(b);
+                printed = strlen(b);
+                b += printed;
                 break;
+              case 'S':
+                // assumes sso optimized std::string
+                printf("%ss, ", reinterpret_cast<const std::string*>(b)->c_str());
+                printed = sizeof(std::string);
+                b += printed;
+                break;
+              default:
+                printf("error, wrong parameter: %c\n", *f);
             }
+            if (printed == 0)
+              break;
           }
+          else
+          {
+            printf(", ");
+            b += printed;
+          }
+
           if ((size_t)(b - buf) > buf_size)
           {
             printf("fmt is too large for buffer at %zu", buf_size);
@@ -144,7 +161,7 @@ int main(int argc, char** argv)
       usleep(1000);
   }
 
-  free(buf);
+  free(buf_to_free);
 
   {
     int rc = munmap(mapped, ipc_size);

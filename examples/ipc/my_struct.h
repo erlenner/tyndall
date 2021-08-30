@@ -33,11 +33,11 @@ typedef struct
 
 typedef struct
 {
-  int i;
+  unsigned char i;
   float j;
 } my_struct;
 
-#define my_struct_print(print, s, ...) print("%d %f" __VA_ARGS__ , s.i, s.j)
+#define my_struct_print(print, s, ...) print("%u %f" __VA_ARGS__ , s.i, s.j)
 
 #define my_struct_inc(entry)    \
     do{                         \
