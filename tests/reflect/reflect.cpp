@@ -60,4 +60,12 @@ int main()
     static_assert(reflect(s).get_format() == "fiijhciijjj"_strval);
   }
 
+  {
+    constexpr float s = 3.14f;
+    constexpr size_t size = reflect(s).size();
+    static_assert(size == 1);
+
+    constexpr auto floating_point = reflect(s).get<0>();
+    static_assert(floating_point == s);
+  }
 }

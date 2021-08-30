@@ -13,6 +13,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string>
 #include <tyndall/ipc/smp.h>
 #include <tyndall/reflect/print_format.h>
 
