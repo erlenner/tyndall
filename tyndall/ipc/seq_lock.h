@@ -27,7 +27,7 @@ struct seq_lock_state
 };
 
 template<typename STORAGE>
-class seq_lock
+struct seq_lock
 {
   static_assert(std::is_nothrow_copy_assignable_v<STORAGE>);
   static_assert(std::is_trivially_copy_assignable_v<STORAGE>);

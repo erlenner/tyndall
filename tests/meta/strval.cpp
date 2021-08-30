@@ -1,4 +1,7 @@
 #include <tyndall/meta/strval.h>
+#include <type_traits>
+#include <cstring>
+#include <cassert>
 
 
 int main()
@@ -14,5 +17,14 @@ int main()
   static_assert(("a_b_c"_strval).replace<'_', '-'>() == "a-b-c"_strval);
   static_assert(("///hei"_strval).remove_leading<'/'>() == hei);
   static_assert(to_strval<42>{} == "42"_strval);
+
+  {
+    char buf[100];
+    memset(buf, 0, sizeof(buf));
+    void* buf_p = buf;
+    auto hei_p = static_cast<std::remove_cvref_t<decltype(hei)>*>(buf_p);
+    *hei_p = {};
+    assert(strcmp(buf, hei.c_str()) == 0);
+  }
 
 }

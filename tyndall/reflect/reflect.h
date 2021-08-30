@@ -52,3 +52,11 @@ constexpr auto reflect(T&& t) noexcept
   static_assert(number_of_fields <= REFLECT_MAX_FIELDS, "Struct too large! Maybe increase REFLECT_MAX_FIELDS");
   return reflect_impl<type, size_t_<number_of_fields>{}>(std::forward<type>(t));
 }
+
+template<typename T>
+constexpr auto reflect() noexcept
+{
+  static_assert(std::is_aggregate<T>::value || std::is_scalar<T>::value, "T must be aggregate initializable");
+
+  return reflect(T{});
+}

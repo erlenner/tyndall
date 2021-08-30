@@ -68,6 +68,8 @@ struct strval<Lhs, Rhs...>
   {
     return strval<Rhs...>::template get<index - 1>();
   }
+
+  char data[length()] = { Lhs, Rhs... }; // actual storage
 };
 
 template<>
