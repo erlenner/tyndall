@@ -2,6 +2,7 @@
 #include <type_traits>
 #include <cstddef>
 #include <tyndall/meta/macro.h>
+#include <tyndall/meta/static_warn.h>
 #include "reflection.h"
 #include "n_fields.h"
 
@@ -97,7 +98,11 @@ constexpr auto reflect() noexcept
 {
   using type = std::remove_cvref_t<T>;
 
-  static_assert(std::is_aggregate_v<type> || std::is_scalar_v<type>, "T must be aggregate initializable");
+  constexpr bool aggregate_initializable = std::is_aggregate_v<type> || std::is_scalar_v<type>;
+  static_warn(aggregate_initializable, "T must be aggregate initializable");
 
-  return reflect(T{});
+  if constexpr(aggregate_initializable)
+    return reflect(T{});
+  else
+    return reflection<>{};
 }

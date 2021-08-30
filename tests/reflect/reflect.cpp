@@ -3,6 +3,10 @@
 #include <typeinfo>
 #include <array>
 
+#ifndef NO_ROS
+#include <std_msgs/Float32.h>
+#endif
+
 int main()
 {
 
@@ -68,4 +72,14 @@ int main()
     constexpr auto floating_point = reflect(s).get<0>();
     static_assert(floating_point == s);
   }
+
+#ifndef NO_ROS
+  {
+    // ros messages are not aggregates, so they can't be reflected
+    std_msgs::Float32 msg;
+    static_assert(!std::is_aggregate_v<decltype(msg)> && !std::is_scalar_v<decltype(msg)>);
+    static_assert(reflect<std_msgs::Float32>().get_format() == ""_strval);
+    static_assert(reflect<std_msgs::Float32>().size() == 0);
+  }
+#endif
 }

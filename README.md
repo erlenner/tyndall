@@ -4,6 +4,13 @@
 
 Blueye Robotics open source c++ components
 
+### External Dependencies
+
+[ZeroMQ/libzmq](https://github.com/zeromq/libzmq)
+[Protobuf (c++)](https://github.com/protocolbuffers/protobuf)
+[ROS (optional)](http://wiki.ros.org/ROS/Tutorials)
+[fmt](https://github.com/fmtlib/fmt)
+
 ### Build
 ```
 mkdir build
@@ -167,8 +174,9 @@ tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_t
 tyndall_tool_ipc_read /dev/shm/ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic
 ```
 
-By default, this will only print the hexadecimal representation of the data stored in the shared memory.
-To format the data, you will need to supply the format yourself:
+For [aggregate initializable](https://en.cppreference.com/w/cpp/language/aggregate_initialization) entry types, this will attempt to print the fields of the entry.
+If the entry is not aggregate initializable, the hexadecimal representation of the entry will be printed.
+You can still get a formatted print of non-aggregate-initializables by supplying the format yourself:
 
 ```shell
 tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic f
@@ -176,17 +184,29 @@ tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_t
 
 The format is a list of type ids according to:
 ```cpp
-i = int
-f = float
 s = string (null terminated)
+S = std::string (assumed to be in SSO state)
+b = bool
+f = float
+d = double
+i = int
+j = unsigned int
+c = char
+h = unsigned char
+l = long
+m = unsigned long
+x = long long
+y = unsigned long long
 ```
 
-So to print a struct `{ int a; float b, c; const char d[10];}` you would run:
+So to print a struct `struct S{ int a; unsigned char b; float c, d; S(){}}` you would run:
 ```shell
-tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic iffs
+tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic ihff
 ```
+
+Note that the entry is assumed to have standard alignment.
 
 You can ignore a specified amount of bytes in the struct by having a number in the format:
 ```shell
-tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic i8s
+tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic i8f
 ```
