@@ -63,6 +63,9 @@ static inline int shmem_unlink_all(const char *prefix)
     if (match)
       shmem_unlink(dir_name);
   }
+
+  closedir(dir);
+
   return 0;
 }
 
