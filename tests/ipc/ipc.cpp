@@ -129,5 +129,13 @@ ipc_write_float(42, '/test/py2c++topic')
     }
   }
 
+  // moving
+  {
+    ipc_rtid_reader<my_struct> a = create_ipc_rtid_reader<my_struct>("test/moving");
+
+    ipc_rtid_reader<my_struct> b;
+    b = std::move(a);
+  }
+
   ipc_cleanup();
 }

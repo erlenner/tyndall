@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <string.h>
+#include <tyndall/meta/strval.h>
 
 enum shmem_error
 {
@@ -97,7 +98,7 @@ class shmem_data
 {
   void *buf;
   typename DATA_STRUCTURE::state state;
-  typedef typename DATA_STRUCTURE::storage storage;
+  using storage = typename DATA_STRUCTURE::storage;
 
 public:
 
@@ -106,7 +107,8 @@ public:
   {
     static_assert(ID::occurrences('/') == 0, "Id can't have slashes");
 
-    init(ID::c_str());
+    if constexpr (ID{} != ""_strval)
+      init(ID::c_str());
   }
 
   shmem_data(const char* id) noexcept
@@ -145,10 +147,15 @@ public:
     tailer_loc->df = {}; // store debug format string
   }
 
-  ~shmem_data() noexcept
+  void uninit() noexcept
   {
     if ((buf != NULL) && (buf != (void*)-1))
       shmem_unmap(buf, sizeof(DATA_STRUCTURE));
+  }
+
+  ~shmem_data() noexcept
+  {
+    uninit();
   }
 
   void write(const storage& entry) noexcept
@@ -164,9 +171,19 @@ public:
   }
 
   // disable copy
-  shmem_data operator=(const shmem_data) noexcept = delete;
   shmem_data(shmem_data& other) noexcept = delete;
-  shmem_data operator=(shmem_data&& other) noexcept = delete;
+
+  // enable move
+  shmem_data& operator=(shmem_data&& other) noexcept
+  {
+    uninit();
+
+    buf = other.buf;
+    state = other.state;
+    other.buf = NULL;
+
+    return *this;
+  }
 
   shmem_data(shmem_data&& other)
     : buf(other.buf)

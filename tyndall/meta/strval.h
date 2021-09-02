@@ -19,18 +19,6 @@ struct strval<Lhs, Rhs...>
     return strval<Lhs, Rhs..., Args...>();
   }
 
-  template<char... Args>
-  constexpr auto operator==(strval<Args...> rhs) const noexcept
-  {
-    return std::is_same<strval<Lhs, Rhs...>, strval<Args...>>();
-  }
-
-  template<char... Args>
-  constexpr auto operator!=(strval<Args...> rhs) const noexcept
-  {
-    return !(operator==(rhs));
-  }
-
   static constexpr const char* c_str() noexcept
   {
     return (const char[]){ Lhs, Rhs..., '\0' };
@@ -87,18 +75,6 @@ struct strval<>
     return strval<Args...>();
   }
 
-  template<char... Args>
-  constexpr auto operator==(strval<Args...> rhs) const noexcept
-  {
-    return sizeof...(Args) == 0;
-  }
-
-  template<char... Args>
-  constexpr auto operator!=(strval<Args...> rhs) const noexcept
-  {
-    return !(operator==(rhs));
-  }
-
   static constexpr const char* c_str() noexcept
   {
     return (const char[]){ '\0' };
@@ -126,6 +102,18 @@ struct strval<>
     return strval<>{};
   }
 };
+
+template<char... Lhs, char... Rhs>
+constexpr auto operator==(strval<Lhs...> lhs, strval<Rhs...> rhs) noexcept
+{
+  return std::is_same<strval<Lhs...>, strval<Rhs...>>();
+}
+
+template<char... Lhs, char... Rhs>
+constexpr auto operator!=(strval<Lhs...> lhs, strval<Rhs...> rhs) noexcept
+{
+  return !(operator==(lhs, rhs));
+}
 
 template<typename Char, Char... Args>
 constexpr strval<Args...> operator""_strval() noexcept

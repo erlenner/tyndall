@@ -37,8 +37,8 @@ struct seq_lock
 
 public:
 
-  typedef STORAGE storage;
-  typedef seq_lock_state state;
+  using storage = STORAGE;
+  using state = seq_lock_state;
 
   void write(const STORAGE& entry, seq_lock_state&)
   {
