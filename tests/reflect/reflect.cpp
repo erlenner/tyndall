@@ -73,6 +73,7 @@ int main()
     struct S{ int a; unsigned char b; float c, d; S(){}} msg;
     static_assert(!std::is_aggregate_v<decltype(msg)> && !std::is_scalar_v<decltype(msg)>);
     static_assert(reflect<decltype(msg)>().get_format() == ""_strval);
+    static_assert(sizeof(reflect<decltype(msg)>().get_format()) == 0);
     static_assert(reflect<decltype(msg)>().size() == 0);
   }
 }

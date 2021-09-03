@@ -69,6 +69,8 @@ struct strval<Lhs, Rhs...>
 template<>
 struct strval<>
 {
+  char data[0]; // enforce zero size
+
   template<char... Args>
   constexpr auto operator+(strval<Args...> args) const noexcept
   {

@@ -17,6 +17,8 @@ int main()
   static_assert(("a_b_c"_strval).replace<'_', '-'>() == "a-b-c"_strval);
   static_assert(("///hei"_strval).remove_leading<'/'>() == hei);
   static_assert(to_strval<42>{} == "42"_strval);
+  static_assert(sizeof(hei) == 3);
+  static_assert(sizeof(""_strval) == 0);
 
   {
     char buf[100];
