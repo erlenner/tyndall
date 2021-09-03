@@ -42,6 +42,18 @@ constexpr auto print_format_typeid<unsigned int>() noexcept
 }
 
 template<>
+constexpr auto print_format_typeid<short>() noexcept
+{
+  return "s"_strval;
+}
+
+template<>
+constexpr auto print_format_typeid<unsigned short>() noexcept
+{
+  return "t"_strval;
+}
+
+template<>
 constexpr auto print_format_typeid<char>() noexcept
 {
   return "c"_strval;
@@ -122,6 +134,18 @@ constexpr auto print_format_printf<unsigned int>() noexcept
 }
 
 template<>
+constexpr auto print_format_printf<short>() noexcept
+{
+  return "%d"_strval;
+}
+
+template<>
+constexpr auto print_format_printf<unsigned short>() noexcept
+{
+  return "%u"_strval;
+}
+
+template<>
 constexpr auto print_format_printf<char>() noexcept
 {
   return "%c"_strval;
@@ -182,6 +206,8 @@ inline size_t print_format(char c, const char* data)
     case print_format_typeid<double>().get<0>():        return print_format<double>(data);
     case print_format_typeid<int>().get<0>():           return print_format<int>(data);
     case print_format_typeid<unsigned int>().get<0>():  return print_format<unsigned int>(data);
+    case print_format_typeid<short>().get<0>():         return print_format<short>(data);
+    case print_format_typeid<unsigned short>().get<0>():  return print_format<unsigned short>(data);
     case print_format_typeid<char>().get<0>():          return print_format<char>(data);
     case print_format_typeid<unsigned char>().get<0>(): return print_format<unsigned char>(data);
     case print_format_typeid<long>().get<0>():          return print_format<long>(data);

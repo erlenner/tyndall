@@ -3,10 +3,6 @@
 #include <typeinfo>
 #include <array>
 
-#ifndef NO_ROS
-#include <std_msgs/Float32.h>
-#endif
-
 int main()
 {
 
@@ -49,7 +45,7 @@ int main()
       int another_integer;
       unsigned int unsigned_integer;
       unsigned char unsigned_char;
-      char signed_char;
+      unsigned short signed_short;
       A a;
       std::array<unsigned int, 3> b;
     };
@@ -61,7 +57,7 @@ int main()
     constexpr auto b = reflect(s).get<7>();
     static_assert(std::is_same_v<std::remove_cv_t<decltype(b)>, std::remove_cv_t<decltype(s.b)>>);
 
-    static_assert(reflect(s).get_format() == "fiijhciijjj"_strval);
+    static_assert(reflect(s).get_format() == "fiijhtiijjj"_strval);
   }
 
   {
@@ -73,13 +69,10 @@ int main()
     static_assert(floating_point == s);
   }
 
-#ifndef NO_ROS
   {
-    // ros messages are not aggregates, so they can't be reflected
-    std_msgs::Float32 msg;
+    struct S{ int a; unsigned char b; float c, d; S(){}} msg;
     static_assert(!std::is_aggregate_v<decltype(msg)> && !std::is_scalar_v<decltype(msg)>);
-    static_assert(reflect<std_msgs::Float32>().get_format() == ""_strval);
-    static_assert(reflect<std_msgs::Float32>().size() == 0);
+    static_assert(reflect<decltype(msg)>().get_format() == ""_strval);
+    static_assert(reflect<decltype(msg)>().size() == 0);
   }
-#endif
 }
