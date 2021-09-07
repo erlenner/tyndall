@@ -1,6 +1,8 @@
+#pragma once
 #ifdef __cplusplus
 #include <atomic>
 #include <type_traits>
+#include <cassert>
 #else
 #include <stdatomic.h>
 #endif
@@ -77,7 +79,12 @@
 
 // compare exchange
 #ifdef __cplusplus
-#define smp_cmp_xch(x, expected, desired) ({ static_assert((sizeof(x) == 4) && (alignof(x) == sizeof(x)), "smp_cmp_xch only implemented for 32bit"); auto tmp = expected; std::atomic_compare_exchange_strong((std::atomic<std::remove_const_t<typeof((x))>>*)(&(x)), &tmp, desired) ? 0 : -1; })
+template<typename T>
+int smp_cmp_xch(std::atomic<T>& x, T expected, T desired)
+{
+  assert(x.is_lock_free());
+  return std::atomic_compare_exchange_strong(&x, &expected, desired) ? 0 : -1;
+}
 #else
 #define smp_cmp_xch(x, expected, desired) ({ static_assert(false, "no smp_cmp_xch for c implemented\n"); 0; }) // TODO
 #endif

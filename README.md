@@ -4,8 +4,9 @@
 
 Blueye Robotics open source c++ components
 
-### External Dependencies
+### Requirements
 
+gcc >= 11
 [ZeroMQ/libzmq](https://github.com/zeromq/libzmq)
 [Protobuf (c++)](https://github.com/protocolbuffers/protobuf)
 [ROS (optional)](http://wiki.ros.org/ROS/Tutorials)

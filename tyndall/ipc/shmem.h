@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <string.h>
+#include <stddef.h>
 #include <tyndall/meta/strval.h>
 
 enum shmem_error
@@ -14,14 +15,14 @@ enum shmem_error
   SHMEM_MAP_FAILED,
 };
 
-static inline int shmem_create(void** addr, const char* id, int size)
+static inline int shmem_create(void** addr, const char* id, size_t size)
 {
   // memfd_create
   int fd = shm_open(id, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
   if (fd == -1)
     return SHMEM_SHM_FAILED;
 
-  int rc = ftruncate(fd, size);
+  int rc = ftruncate(fd, static_cast<long>(size));
   if (rc != 0)
     return SHMEM_TRUNCATE_FAILED;
 
@@ -32,7 +33,7 @@ static inline int shmem_create(void** addr, const char* id, int size)
   return 0;
 }
 
-static inline int shmem_unmap(void *addr, int size)
+static inline int shmem_unmap(void *addr, size_t size)
 {
   return munmap(addr, size);
 }
@@ -125,15 +126,24 @@ public:
 
   void init(const char *id) noexcept
   {
-    constexpr auto type_hash = type_info_hash(DATA_STRUCTURE);
+    constexpr auto type_hash = typeinfo_hash(DATA_STRUCTURE);
+
+    //#if !defined(__GNUC__) || defined(__clang__)
+    //#define IPC_NO_DEBUG_DATA
+    //#endif
+
+    #ifndef IPC_NO_DEBUG_DATA
     constexpr auto debug_format = reflect<typename DATA_STRUCTURE::storage>().get_format();
+    #endif
 
     struct {
-      std::remove_cv_t<decltype(type_hash)> th = type_hash;
-      std::remove_cv_t<decltype(debug_format)> df = debug_format;
+      std::atomic<std::remove_cv_t<decltype(type_hash)>> th;
+      #ifndef IPC_NO_DEBUG_DATA
+      std::remove_cv_t<decltype(debug_format)> df;
+      #endif
     } tailer;
 
-    constexpr int size = sizeof(DATA_STRUCTURE) + sizeof(tailer);
+    constexpr size_t size = sizeof(DATA_STRUCTURE) + sizeof(tailer);
     int rc = shmem_create(&buf, id, size);
     assert(rc == 0);
 
@@ -144,10 +154,12 @@ public:
     // put type tailer in the end for validation
     static_assert(sizeof(tailer) < CACHELINE_BYTES, "tailer needs to fit in a single section, as aligned by " M_STRINGIFY(CACHELINE_BYTES));
     auto tailer_loc = reinterpret_cast<decltype(tailer)*>(&data_structure() + 1);
-    if (smp_cmp_xch(tailer_loc->th, 0, type_hash) == -1)
+    if (smp_cmp_xch(tailer_loc->th, 0u, type_hash) == -1)
       assert(tailer_loc->th == type_hash);
 
+    #ifndef IPC_NO_DEBUG_DATA
     tailer_loc->df = {}; // store debug format string
+    #endif
   }
 
   void uninit() noexcept

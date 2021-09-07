@@ -79,7 +79,7 @@ log_level_t log_level(const char* cat)
 
             if (glob_start == e) // first iteration
             {
-              if (strncmp(glob_start, cat_match, glob - glob_start) != 0)
+              if (strncmp(glob_start, cat_match, static_cast<size_t>(glob - glob_start)) != 0)
                 matches = false;
             }
             else
@@ -87,7 +87,7 @@ log_level_t log_level(const char* cat)
               bool cat_match_matches = false;
               for (const char* c = cat_match; !cat_match_matches && (*c != '\0'); ++c)
               {
-                if (strncmp(c, glob_start, glob - glob_start) == 0)
+                if (strncmp(c, glob_start, static_cast<size_t>(glob - glob_start)) == 0)
                 {
                   cat_match_matches = true;
                   cat_match = c;
