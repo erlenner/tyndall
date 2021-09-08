@@ -4,6 +4,7 @@
 #include <climits>
 #include <typeinfo>
 #include <cstdio>
+#include "tyndall/meta/typeinfo.h"
 
 // based on https://github.com/apolukhin/pfr_non_boost/blob/91f801bb08cf817c640d9c6d57ddfad5f38de92d/include/pfr/detail/fields_count.hpp
 // , with license: https://github.com/apolukhin/pfr_non_boost/blob/91f801bb08cf817c640d9c6d57ddfad5f38de92d/LICENSE_1_0.txt
@@ -90,7 +91,7 @@ constexpr size_t n_fields() noexcept
 {
   constexpr size_t max_field_count = sizeof(T)*CHAR_BIT;
 
-  using type = std::remove_cvref_t<T>;
+  using type = typeinfo_remove_cvref_t<T>;
 
   static_assert(std::is_aggregate<type>::value || std::is_scalar<type>::value, "T must be aggregate initializable");
 

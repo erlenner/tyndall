@@ -3,6 +3,7 @@
 #include <utility>
 
 #include "tyndall/meta/strval.h"
+#include "tyndall/meta/typeinfo.h"
 #include "print_format.h"
 
 template<typename T>
@@ -35,7 +36,7 @@ struct reflection<Lhs, Rhs...> : public reflection<Rhs...>
 
   static constexpr auto get_format() noexcept
   {
-    constexpr auto lhs_format = ::print_format_typeid<std::remove_cvref_t<Lhs>>();
+    constexpr auto lhs_format = ::print_format_typeid<typeinfo_remove_cvref_t<Lhs>>();
 
     constexpr auto rhs_format = reflection<Rhs...>::get_format();
 

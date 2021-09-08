@@ -5,6 +5,7 @@
 #include <tyndall/meta/static_warn.h>
 #include "reflection.h"
 #include "n_fields.h"
+#include "tyndall/meta/typeinfo.h"
 
 // based on https://github.com/apolukhin/pfr_non_boost/blob/91f801bb08cf817c640d9c6d57ddfad5f38de92d/include/pfr/detail/core17_generated.hpp
 // , with license: https://github.com/apolukhin/pfr_non_boost/blob/91f801bb08cf817c640d9c6d57ddfad5f38de92d/LICENSE_1_0.txt
@@ -52,14 +53,14 @@ constexpr reflection<> reflect_impl(T&&, size_t_<I>) noexcept
 }
 
 template<typename T>
-constexpr auto reflect_scalar(T&& t, std::enable_if_t<!std::is_class_v<std::remove_cvref_t<T>>>* = 0) noexcept
+constexpr auto reflect_scalar(T&& t, std::enable_if_t<!std::is_class_v<typeinfo_remove_cvref_t<T>>>* = 0) noexcept
 {
-  static_assert(std::is_scalar_v<std::remove_cvref_t<T>>, "T must be scalar");
+  static_assert(std::is_scalar_v<typeinfo_remove_cvref_t<T>>, "T must be scalar");
   return reflection<decltype(t)>{std::forward<T>(t)};
 }
 
 template<typename T>
-constexpr auto reflect_scalar(T&& t, std::enable_if_t<std::is_class_v<std::remove_cvref_t<T>>>* = 0) noexcept
+constexpr auto reflect_scalar(T&& t, std::enable_if_t<std::is_class_v<typeinfo_remove_cvref_t<T>>>* = 0) noexcept
 {
   auto&& [a0] = t;
   return reflection<decltype(a0)>{std::forward<decltype(a0)>(a0)};
@@ -69,7 +70,7 @@ constexpr auto reflect_scalar(T&& t, std::enable_if_t<std::is_class_v<std::remov
 template<typename T>
 constexpr auto reflect_aggregate(T&& t) noexcept
 {
-  using type = const std::remove_cvref_t<T>;
+  using type = const typeinfo_remove_cvref_t<T>;
 
   static_assert(!std::is_union_v<type>, "unions are not supported");
 
@@ -81,7 +82,7 @@ constexpr auto reflect_aggregate(T&& t) noexcept
 template<typename T>
 constexpr auto reflect_aggregate() noexcept
 {
-  static_assert(std::is_aggregate_v<std::remove_cvref_t<T>>, "T must be aggregate");
+  static_assert(std::is_aggregate_v<typeinfo_remove_cvref_t<T>>, "T must be aggregate");
 
   return reflect_aggregate(T{});
 }
@@ -98,7 +99,7 @@ constexpr auto reflect(T&& t) noexcept
 template<typename T>
 constexpr auto reflect() noexcept
 {
-  using type = std::remove_cvref_t<T>;
+  using type = typeinfo_remove_cvref_t<T>;
 
   constexpr bool aggregate_initializable = std::is_aggregate_v<type> || std::is_scalar_v<type>;
   static_warn(aggregate_initializable, "T must be aggregate initializable");

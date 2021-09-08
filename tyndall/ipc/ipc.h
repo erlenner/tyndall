@@ -63,8 +63,8 @@ inline int ipc_lazy_read(STORAGE& entry, ID)
 // Ipc methods with id specified at runtime.
 // These methods are templated on storage type only,
 // and need to explicitly keep track of lazy initialization of transport.
-#define ipc_rtid_write(entry, id) create_ipc_rtid_lazy<ipc_rtid_writer, std::remove_cvref_t<decltype(entry)>>(id).write(entry)
-#define ipc_rtid_read(entry, id) create_ipc_rtid_lazy<ipc_rtid_reader, std::remove_cvref_t<decltype(entry)>>(id).read(entry)
+#define ipc_rtid_write(entry, id) create_ipc_rtid_lazy<ipc_rtid_writer, typeinfo_remove_cvref_t<decltype(entry)>>(id).write(entry)
+#define ipc_rtid_read(entry, id) create_ipc_rtid_lazy<ipc_rtid_reader, typeinfo_remove_cvref_t<decltype(entry)>>(id).read(entry)
 
 #include <string>
 #include <vector>
