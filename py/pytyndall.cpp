@@ -22,6 +22,8 @@ BOOST_PYTHON_MODULE(pytyndall)
   using namespace boost::python;
   def("ipc_write_float", py_ipc_write<float>);
   def("ipc_read_float", py_ipc_read<float>);
+  def("ipc_write_bool", py_ipc_write<bool>);
+  def("ipc_read_bool", py_ipc_read<bool>);
 }
 
 /*
