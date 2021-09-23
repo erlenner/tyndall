@@ -144,7 +144,7 @@ public:
     struct {
       std::atomic<std::remove_cv_t<decltype(type_hash)>> th;
       #ifndef IPC_NO_DEBUG_DATA
-      std::remove_cv_t<decltype(debug_format)> df;
+      volatile std::remove_cv_t<decltype(debug_format)> df;
       #endif
     } tailer;
 
@@ -159,12 +159,13 @@ public:
     // put type tailer in the end for validation
     static_assert(sizeof(tailer) < CACHELINE_BYTES, "tailer needs to fit in a single section, as aligned by " M_STRINGIFY(CACHELINE_BYTES));
     auto tailer_loc = reinterpret_cast<decltype(tailer)*>(&data_structure() + 1);
-    if (smp_cmp_xch(tailer_loc->th, 0u, type_hash) == -1)
-      assert(tailer_loc->th == type_hash);
 
     #ifndef IPC_NO_DEBUG_DATA
-    tailer_loc->df = {}; // store debug format string
+    tailer_loc->df.set(); // store debug format string
     #endif
+
+    if (smp_cmp_xch(tailer_loc->th, 0u, type_hash) == -1)
+      assert(tailer_loc->th == type_hash);
   }
 
   void uninit() noexcept

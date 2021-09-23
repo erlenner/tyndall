@@ -63,6 +63,14 @@ struct strval<Lhs, Rhs...>
     return strval<Rhs...>::template get<index - 1>();
   }
 
+  // set is volatile because it only matters in reinterpret_cast situations
+  void set() volatile
+  {
+    const char tmp[] = { Lhs, Rhs... };
+    for (int i=0; i<length(); ++i)
+      data[i] = tmp[i];
+  }
+
   char data[length()] = { Lhs, Rhs... }; // actual storage
 };
 
@@ -102,6 +110,10 @@ struct strval<>
   static constexpr auto remove_leading() noexcept
   {
     return strval<>{};
+  }
+
+  void set() volatile
+  {
   }
 };
 
