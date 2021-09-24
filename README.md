@@ -7,9 +7,13 @@ Blueye Robotics open source c++ components
 ### Requirements
 
 gcc / c++17, cmake
+
 [ZeroMQ/libzmq](https://github.com/zeromq/libzmq)
+
 [Protobuf (c++)](https://github.com/protocolbuffers/protobuf)
+
 [ROS (optional)](http://wiki.ros.org/ROS/Tutorials)
+
 [fmt](https://github.com/fmtlib/fmt)
 
 ### Build
