@@ -89,15 +89,6 @@ ipc_write_float(42, '/test/py2c++topic')
   }
 
   {
-    ipc_rtid_write(ref, "/test/rtid");
-
-    my_struct entry;
-    int rc = ipc_rtid_read(entry, "/test/rtid");
-    check(rc == 0);
-    check(entry == ref);
-  }
-
-  {
     {
       //ipc_writer<my_struct, strval_t("test/mt_safe")> writer;
       auto writer = create_ipc_writer(my_struct, "test/mt_safe");
