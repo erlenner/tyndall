@@ -16,13 +16,48 @@ https://github.com/rigtorp/Seqlock
 #include <errno.h>
 #include "smp.h"
 
+__attribute__((always_inline)) inline unsigned seq_lock_write_begin(unsigned* seq)
+{
+  unsigned seq1 = *seq;
+
+  smp_write_once(*seq, ++seq1);
+  smp_wmb();
+
+  return seq1;
+}
+
+__attribute__((always_inline)) inline void seq_lock_write_end(unsigned* seq, unsigned seq1)
+{
+  smp_wmb();
+  smp_write_once(*seq, ++seq1);
+}
+
+__attribute__((always_inline)) inline unsigned seq_lock_read_begin(unsigned* seq)
+{
+  unsigned seq1;
+  while((seq1 = smp_read_once(*seq)) & 1)
+    cpu_relax();
+
+  smp_rmb();
+
+  return seq1;
+}
+
+__attribute__((always_inline)) inline unsigned seq_lock_read_retry(unsigned* seq, unsigned seq1)
+{
+  smp_rmb();
+  unsigned seq2 = smp_read_once(*seq);
+
+  return seq2 != seq1;
+}
+
 
 #ifdef __cplusplus
 
 
 struct seq_lock_state
 {
-  int prev_seq = 0;
+  unsigned prev_seq = 0;
   bool has_read_once = false;
 };
 
@@ -32,7 +67,7 @@ struct seq_lock
   static_assert(std::is_nothrow_copy_assignable_v<STORAGE>);
   static_assert(std::is_trivially_copy_assignable_v<STORAGE>);
 
-  int seq;
+  unsigned seq;
   STORAGE entry;
 
 public:
@@ -42,50 +77,33 @@ public:
 
   void write(const STORAGE& entry, seq_lock_state&)
   {
-    int seq = this->seq;
-
-    smp_write_once(this->seq, ++seq);
-    smp_wmb();
+    unsigned seq = seq_lock_write_begin(&this->seq);
 
     this->entry = entry;
 
-    smp_wmb();
-    smp_write_once(this->seq, ++seq);
+    seq_lock_write_end(&this->seq, seq);
   }
 
   int read(STORAGE& entry, seq_lock_state& state)
   {
-    int seq1, seq2, rc;
+    int rc;
+    unsigned seq1;
 
-    seq1 = smp_read_once(this->seq);
-    while(1)
+    do
     {
-      if (seq1 & 1)
-      {
-        cpu_relax();
-        seq1 = smp_read_once(this->seq);
-        continue;
-      }
-
-      smp_rmb();
+      seq1 = seq_lock_read_begin(&this->seq);
       entry = this->entry;
-      smp_rmb();
 
-      seq2 = smp_read_once(this->seq);
-      if (seq2 == seq1)
-        break;
+    } while (seq_lock_read_retry(&this->seq, seq1));
 
-      seq1 = seq2;
-    }
-
-    if (seq2 != state.prev_seq)
+    if (seq1 != state.prev_seq)
     {
       rc = 0;
-      state.prev_seq = seq2;
+      state.prev_seq = seq1;
       if (!state.has_read_once)
         state.has_read_once = true;
     }
-    else if ((seq2 == 0) && !state.has_read_once)
+    else if ((seq1 == 0) && !state.has_read_once)
     {
       rc = -1;
       errno = ENOMSG;

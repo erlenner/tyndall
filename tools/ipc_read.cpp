@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string>
-#include <tyndall/ipc/smp.h>
+#include <tyndall/ipc/seq_lock.h>
 #include <tyndall/reflect/print_format.h>
 
 void print(char* fmt, const char* buf, size_t buf_size)
@@ -98,8 +98,8 @@ int main(int argc, char** argv)
   assert(mapped != MAP_FAILED);
   assert(reinterpret_cast<uintptr_t>(mapped) % CACHELINE_BYTES == 0);
 
-  int& ipc_seq = *(int*)mapped;
-  const char* const ipc_buf = (const char*)mapped + sizeof(ipc_seq);
+  unsigned* ipc_seq = (unsigned*)mapped;
+  const char* const ipc_buf = (const char*)mapped + sizeof(*ipc_seq);
   const size_t buf_size = ipc_size - 2*sizeof(int);
   char* buf = (char*)malloc(buf_size + CACHELINE_BYTES);
   char* const buf_to_free = buf;
@@ -112,35 +112,19 @@ int main(int argc, char** argv)
       buf += alignment - alignment_error;
   }
 
-  int seq = 0;
+  unsigned seq = 0;
   while(1)
   {
     bool new_buf = false;
     {
-      int seq1, seq2;
 
-      seq1 = smp_read_once(ipc_seq);
-      while(1)
+      unsigned seq1;
+      do
       {
-        if (seq1 & 1)
-        {
-          cpu_relax();
-          seq1 = smp_read_once(ipc_seq);
-          continue;
-        }
-
-        smp_rmb();
-
+        seq1 = seq_lock_read_begin(ipc_seq);
         memcpy(buf, ipc_buf, buf_size);
 
-        smp_rmb();
-
-        seq2 = smp_read_once(ipc_seq);
-        if (seq2 == seq1)
-          break;
-
-        seq1 = seq2;
-      }
+      } while (seq_lock_read_retry(ipc_seq, seq1));
 
       if (seq1 != seq)
       {

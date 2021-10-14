@@ -13,7 +13,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_definitions(-DDEBUG)
 
 include_directories(${CMAKE_SOURCE_DIR})
-set(LD_FLAGS "-lpthread -lzmq -lprotobuf -lfmt -lrt")
+set(LD_FLAGS "-lpthread -lzmq -lprotobuf -lfmt -lrt -latomic")
 
 find_package(roscpp)
 

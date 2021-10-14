@@ -11,7 +11,8 @@
 
 #define barrier() __asm__ __volatile__("": : :"memory")
 
-#if __arm__
+#if __arm__ // tuned for armv7 (32-bit)
+
 #define CACHELINE_BYTES 32
 // L1: https://developer.arm.com/documentation/ddi0388/f/Level-1-Memory-System/About-the-L1-memory-system
 // L2: https://community.nxp.com/thread/510105
@@ -22,13 +23,20 @@
 // https://developer.arm.com/documentation/genc007826/latest
 // http://www.cl.cam.ac.uk/~pes20/ppc-supplemental/test7.pdf
 #define smp_dmb(option) __asm__ __volatile__ ("dmb " #option : : : "memory")
-#define smp_mb() smp_dmb(ish);
-#define smp_wmb() smp_dmb(ishst);
+#define smp_mb() smp_dmb(ish)
+#define smp_wmb() smp_dmb(ishst)
+#ifdef __aarch64__
+#define smp_rmb() smp_dmb(ishld); // armv8
+#else
 #define smp_rmb() smp_mb()
-//#define smp_rmb() smp_dmb(ishld); // armv8
-//#define smp_mb() atomic_thread_fence(memory_order_acq_rel);
-//#define smp_wmb() smp_mb()
-//#define smp_rmb() smp_mb()
+#endif
+
+// C/C++11
+//#define smp_mb() std::atomic_signal_fence(std::memory_order_acq_rel) // c11 implementation
+////#define smp_rmb() smp_mb()
+////#define smp_wmb() smp_mb()
+//#define smp_rmb() std::atomic_signal_fence(std::memory_order_acquire)
+//#define smp_wmb() std::atomic_signal_fence(std::memory_order_release)
 
 // https://patchwork.kernel.org/patch/1361581/
 #define cpu_relax()   do {  \
@@ -37,7 +45,7 @@
   asm("nop");               \
   asm("nop");               \
   asm("nop");               \
-  smp_mb();                 \
+  smp_dmb(ish);             \
 } while (0)
 
 #elif __x86_64__
@@ -50,30 +58,21 @@
 #define cpu_relax() barrier()
 #endif
 
-// C11 / C++11 acquire release semantics, as per https://en.cppreference.com/w/c/atomic/memory_order and https://en.cppreference.com/w/cpp/atomic/memory_order
-#ifdef __cplusplus
-#define smp_load_acquire(x) std::atomic_load_explicit((std::atomic<typeof(x)>*)&x, std::memory_order_acquire)
-#define smp_store_release(x, val) std::atomic_store_explicit((std::atomic<typeof(x)>*)&x, val, std::memory_order_release)
-#else
-#define smp_load_acquire(x) atomic_load_explicit(&x, memory_order_acquire)
-#define smp_store_release(x, val) atomic_store_explicit(&x, val, memory_order_release)
-#endif
-
 
 
 // Protected variable accesses as per http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0124r5.html#Variable%20Access
 
 // KERNEL
-#define smp_read_once(x)  (*(const volatile typeof(x) *)&(x))
-#define smp_write_once(x, val) do { *(volatile typeof(x) *)&(x) = (val); } while (0)
+#define smp_read_once(x)  (*(const volatile __typeof__(x) *)&(x))
+#define smp_write_once(x, val) do { *(volatile __typeof__(x) *)&(x) = (val); } while (0)
 
-//// C11
+// C11
 //#ifdef __cplusplus
-//#define smp_read_once(x)  (std::atomic_load_explicit((const volatile typeof(x) *)(&(x)), memory_order_relaxed))
-//#define smp_write_once(x, val) std::atomic_store_explicit((std::atomic<typeof(x)>*)(volatile typeof(x) *)(&(x)), val, std::memory_order_relaxed)
+//#define smp_read_once(x)  (std::atomic_load_explicit((std::atomic<__typeof__(x)>*)&(x), std::memory_order_acquire))
+//#define smp_write_once(x, val) std::atomic_store_explicit((std::atomic<__typeof__(x)>*)&(x), val, std::memory_order_release)
 //#else
-//#define smp_read_once(x)  ((atomic_load_explicit((const volatile typeof(x) *)(&(x)), memory_order_relaxed)))
-//#define smp_write_once(x, val) atomic_store_explicit((volatile typeof(x) *)(&(x)), val, memory_order_relaxed)
+//#define smp_read_once(x)  ((atomic_load_explicit((&(x)), memory_order_acquire)))
+//#define smp_write_once(x, val) atomic_store_explicit((&(x)), val, memory_order_release)
 //#endif
 
 
