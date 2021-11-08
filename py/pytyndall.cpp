@@ -1,34 +1,5 @@
 #include <boost/python.hpp>
-#include <tyndall/ipc/ipc.h>
-
-template<template<typename>typename TRANSPORT, typename STORAGE>
-inline TRANSPORT<STORAGE>& create_ipc_rtid_lazy(const char* id)
-{
-  std::string prepared_id = id_rtid_prepare<STORAGE>(id);
-
-  // manual registry is needed as substitution for compile time template matching
-  struct registry_item
-  {
-    std::string id;
-    TRANSPORT<STORAGE> transport;
-  };
-  static std::vector<registry_item> registry;
-
-  {
-    for (auto& item : registry)
-      if (item.id == prepared_id)
-        return item.transport;
-  }
-
-  {
-    registry.push_back(registry_item{ .id = prepared_id, .transport = TRANSPORT<STORAGE>{prepared_id.c_str()} });
-  }
-
-  return registry.back().transport;
-}
-#define ipc_rtid_write(entry, id) create_ipc_rtid_lazy<ipc_rtid_writer, typeinfo_remove_cvref_t<decltype(entry)>>(id).write(entry)
-#define ipc_rtid_read(entry, id) create_ipc_rtid_lazy<ipc_rtid_reader, typeinfo_remove_cvref_t<decltype(entry)>>(id).read(entry)
-
+#include <tyndall/ipc/ipc_rtid.h>
 
 template<typename STORAGE>
 void py_ipc_write(const STORAGE& entry, const char* id)

@@ -12,9 +12,11 @@ gcc / c++17, cmake
 
 [Protobuf (c++)](https://github.com/protocolbuffers/protobuf)
 
-[ROS (optional)](http://wiki.ros.org/ROS/Tutorials)
-
 [fmt](https://github.com/fmtlib/fmt)
+
+[Boost.Python](https://github.com/boostorg/python)
+
+[ROS (optional)](http://wiki.ros.org/ROS/Tutorials)
 
 ### Build
 ```

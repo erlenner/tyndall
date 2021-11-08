@@ -3,12 +3,13 @@
 
 #ifdef __cplusplus
 
+#include <tyndall/meta/strval.h>
 #include "seq_lock.h"
 #include "id.h"
-#include <tyndall/meta/strval.h>
+#include "ipc_rtid.h"
 
 // ipc_write and ipc_read are templated on storage type and id, so that the transport will be initiated only on calls with new combinations of storage type and id.
-// The id needs to be a string literal, otherwise use ipc_lazy_write and ipc_lazy_read directly.
+// The id needs to be a string literal, otherwise use ipc_lazy_write / read (for strval), or ipc_rtid_write / read (for c strings).
 #define ipc_write(entry, id) ipc_lazy_write(entry, id ## _strval)
 
 // ipc_read return value: 0 on success, -1 on failure.
@@ -39,30 +40,6 @@ inline int ipc_lazy_read(STORAGE& entry, ID)
   static ipc_reader<STORAGE, ID> reader;
 
   return reader.read(entry);
-}
-
-// Ipc methods with id specified at runtime.
-#include <vector>
-#include <tyndall/meta/typeinfo.h>
-#include <shared_mutex>
-
-template<typename STORAGE>
-using ipc_rtid_writer = shmem_data<seq_lock<STORAGE>, SHMEM_WRITE>;
-template<typename STORAGE>
-using ipc_rtid_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ>;
-
-template<typename STORAGE>
-inline ipc_rtid_writer<STORAGE> create_ipc_rtid_writer(const char* id)
-{
-  std::string prepared_id = id_rtid_prepare<STORAGE>(id);
-  return ipc_rtid_writer<STORAGE>{prepared_id.c_str()};
-}
-
-template<typename STORAGE>
-inline ipc_rtid_reader<STORAGE> create_ipc_rtid_reader(const char* id)
-{
-  std::string prepared_id = id_rtid_prepare<STORAGE>(id);
-  return ipc_rtid_reader<STORAGE>{prepared_id.c_str()};
 }
 
 #endif

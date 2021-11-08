@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include <tyndall/meta/strval.h>
 #include <tyndall/meta/hash.h>
