@@ -62,33 +62,6 @@ int main()
   }
 
   {
-    int rc = system(R"(python3 -c "
-from pytyndall import ipc_write_float, ipc_read_float
-ipc_write_float(42, '/test/pytopic')
-
-f = ipc_read_float('/test/pytopic')
-assert f == 42, 'got different value back'
-    ")");
-    check(rc == 0);
-  }
-
-  {
-    {
-      int rc = system(R"(python3 -c "
-from pytyndall import ipc_write_float, ipc_read_float
-ipc_write_float(42, '/test/py2c++topic')
-    ")");
-      check(rc == 0);
-    }
-    {
-      float entry;
-      int rc = ipc_read(entry, "/test/py2c++topic");
-      check(rc == 0);
-      check(entry == 42);
-    }
-  }
-
-  {
     {
       //ipc_writer<my_struct, strval_t("test/mt_safe")> writer;
       auto writer = create_ipc_writer(my_struct, "test/mt_safe");
