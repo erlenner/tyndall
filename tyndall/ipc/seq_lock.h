@@ -68,6 +68,9 @@ struct seq_lock
   static_assert(std::is_trivially_copy_assignable_v<STORAGE>);
 
   unsigned seq;
+
+  char padding[CACHELINE_BYTES - sizeof(seq)];
+
   STORAGE entry;
 
 public:

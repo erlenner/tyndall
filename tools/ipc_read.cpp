@@ -99,8 +99,8 @@ int main(int argc, char** argv)
   assert(reinterpret_cast<uintptr_t>(mapped) % CACHELINE_BYTES == 0);
 
   unsigned* ipc_seq = (unsigned*)mapped;
-  const char* const ipc_buf = (const char*)mapped + sizeof(*ipc_seq);
-  const size_t buf_size = ipc_size - 2*sizeof(int);
+  const char* const ipc_buf = (const char*)mapped + CACHELINE_BYTES;
+  const size_t buf_size = ipc_size - 2*sizeof(int) - CACHELINE_BYTES;
   char* buf = (char*)malloc(buf_size + CACHELINE_BYTES);
   char* const buf_to_free = buf;
 
