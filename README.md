@@ -177,8 +177,8 @@ Full example in [examples/ipc/](examples/ipc/).
 The [ipc\_read](tools/ipc_read.cpp) tool can be used to print a topic, using the name or path:
 
 ```shell
-tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic
-tyndall_tool_ipc_read /dev/shm/ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic
+tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_my_topic_891174619
+tyndall_tool_ipc_read /dev/shm/ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_my_topic_891174619
 ```
 
 For [aggregate initializable](https://en.cppreference.com/w/cpp/language/aggregate_initialization) entry types, this will attempt to print the fields of the entry.
@@ -186,7 +186,7 @@ If the entry is not aggregate initializable, the hexadecimal representation of t
 You can still get a formatted print of non-aggregate-initializables by supplying the format yourself:
 
 ```shell
-tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic f
+tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_my_topic_891174619 f
 ```
 
 The format is a list of type ids according to:
@@ -208,12 +208,12 @@ y = unsigned long long
 
 So to print a struct `struct S{ int a; unsigned char b; float c, d; S(){}}` you would run:
 ```shell
-tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic ihff
+tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_my_topic_891174619 ihff
 ```
 
 Note that the entry is assumed to have standard alignment.
 
 You can ignore a specified amount of bytes in the struct by having a number in the format:
 ```shell
-tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_891174619_my_topic i8f
+tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_my_topic_891174619 i8f
 ```

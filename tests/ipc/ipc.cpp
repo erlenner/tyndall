@@ -88,6 +88,24 @@ int main()
   }
 
   {
+    ipc_write(ref, "/test/normal_to_rtid");
+
+    my_struct entry;
+    int rc = ipc_rtid_read(entry, "/test/normal_to_rtid");
+    check(rc == 0);
+    check(entry == ref);
+  }
+
+  {
+    ipc_rtid_write(ref, "/test/rtid_to_normal");
+
+    my_struct entry;
+    int rc = ipc_read(entry, "/test/rtid_to_normal");
+    check(rc == 0);
+    check(entry == ref);
+  }
+
+  {
     {
       auto writer = create_ipc_rtid_writer<my_struct>("test/rtid_mt_safe");
       writer.write(ref);
