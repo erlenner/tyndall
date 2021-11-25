@@ -28,10 +28,10 @@ namespace ros_context
 // lazy initialization of ros communication objects is used for ease of use
 namespace ros_context
 {
-  static ros::NodeHandle *nh = NULL;
-  static std::mutex ros_mutex;
-  static std::thread ros_thread;
-  static int run_ros = 1;
+  extern ros::NodeHandle *nh;
+  extern std::mutex ros_mutex;
+  extern std::thread ros_thread;
+  extern int run_ros;
 
   // methods
 
