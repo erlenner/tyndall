@@ -9,9 +9,9 @@
 // mock
 namespace ros_context
 {
-  int shutdown()
+  inline int shutdown()
   { return 0; }
-  int init(int argc, char** argv, std::chrono::milliseconds loop_sleep = std::chrono::milliseconds{3}, const char *node_name = "default_node_name")
+  inline int init(int argc, char** argv, std::chrono::milliseconds loop_sleep = std::chrono::milliseconds{3}, const char *node_name = "default_node_name")
   { return 0;}
 }
 #include <tyndall/ipc/ipc.h>
@@ -35,7 +35,7 @@ namespace ros_context
 
   // methods
 
-  int shutdown()
+  inline int shutdown()
   {
     run_ros = 0;
     ros_thread.join();
@@ -44,7 +44,7 @@ namespace ros_context
     return 0;
   }
 
-  int init(int argc, char** argv, std::chrono::milliseconds loop_sleep = std::chrono::milliseconds{3}, const char *node_name = "default_node_name")
+  inline int init(int argc, char** argv, std::chrono::milliseconds loop_sleep = std::chrono::milliseconds{3}, const char *node_name = "default_node_name")
   {
     assert(nh == NULL); // enforce single initialization per process
 
