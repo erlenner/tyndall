@@ -6,7 +6,7 @@ Blueye Robotics open source c++ components
 
 ### Requirements
 
-gcc / c++17, cmake
+gcc / c++20, cmake
 
 [ZeroMQ/libzmq](https://github.com/zeromq/libzmq)
 
@@ -135,6 +135,52 @@ while(1)
 }
 ```
 Full examples in [examples/proto/zmq\_proto\_pub.cpp](examples/proto/zmq_proto_pub.cpp) and [examples/proto/zmq\_proto\_sub.cpp](examples/proto/zmq_proto_sub.cpp).
+
+## ros\_context
+A wrapper around ros.
+It provides a minimal of lazy methods for sending and receiving ros messages and service calls.
+
+Pub / sub example:
+
+### Reader
+
+```
+#include <tyndall/ros_context.h>
+#include <std_msgs/Int32.h>
+
+ros_context::init(argc, argv, std::chrono::milliseconds{3}, "ex_ros_context_write");
+
+std_msgs::Int32 msg;
+msg.data = 42;
+
+ros_context_write(msg, "/ex_ros_context");
+```
+
+### Writer
+
+```
+#include <tyndall/ros_context.h>
+#include <std_msgs/Int32.h>
+
+ros_context::init(argc, argv, std::chrono::milliseconds{3}, "ex_ros_context_read");
+
+while(1)
+{
+  std_msgs::Int32 msg;
+
+  int rc = ros_context_read(msg, "/ex_ros_context");
+
+  if (rc == 0)
+    printf("read: %d\n", msg.data);
+  else
+    std::this_thread::sleep_for(std::chrono::milliseconds{3});
+}
+```
+
+Serve / call example:
+
+```
+```
 
 ## ipc
 Inter process communication in Linux based on shared memory and lockless data structures.
