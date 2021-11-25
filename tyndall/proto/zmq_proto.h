@@ -197,7 +197,8 @@ template<typename Message>
 std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, const char*>
 get_debug_string(const Message& proto)
 {
-  static const std::string debug_string = proto.GetTypeName() + " { " + proto.ShortDebugString() + " }";
+  static std::string debug_string;
+  debug_string = proto.GetTypeName() + " { " + proto.ShortDebugString() + " }";
   return debug_string.c_str();
 }
 
