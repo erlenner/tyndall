@@ -49,7 +49,6 @@ int main()
       ;
       constexpr auto res = c.get<0>();
       printf("c res: %s\n", typeid(res).name());
-      //tstruct<int>::Type t;
       decltype(res)::Type t;
       (void)sizeof(t);
     }
@@ -64,28 +63,10 @@ int main()
 
       iterate<c.size()>
       ([](auto index){
-        //printf("index: %d\n", index());
-        static_assert((index >= 0) && (index < c.size()));
-        printf("index: %s\n", typeid(index).name());
+        printf("itaration %d: %s\n", index(), typeid(index).name());
       });
     }
   }
-
-  //if(tm.match_exec(
-  //  [](auto& arg, const TLs& match) -> bool
-  //  {
-  //    return match.a == 4;
-  //  }
-  //  ,
-  //  [](auto& arg, const TLs& match)
-  //  {
-  //    printf("match: %d, %f\n", match.a, match.b);
-  //    printf("type: %s\n", typeid(arg).name());
-  //  }
-  //) == 0)
-  //  printf("tls success\n");
-  //else
-  //  printf("no tls match\n");
 
   return 0;
 }

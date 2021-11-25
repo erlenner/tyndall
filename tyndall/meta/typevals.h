@@ -51,6 +51,8 @@ struct typevals<Type, Tail...> : public typevals<Tail...>
   }
 
 protected:
+
+  // get_type is a static helper for determining return type of get
   template<int index>
   static constexpr std::enable_if_t<index == sizeof...(Tail),
   const Type&> get_type() noexcept
