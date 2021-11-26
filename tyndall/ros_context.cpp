@@ -1,5 +1,7 @@
 #include "ros_context.h"
 
+
+#ifndef NO_ROS
 namespace ros_context
 {
   ros::NodeHandle *nh = NULL;
@@ -7,3 +9,4 @@ namespace ros_context
   std::thread ros_thread;
   int run_ros = 1;
 }
+#endif
