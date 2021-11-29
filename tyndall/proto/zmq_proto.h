@@ -147,7 +147,7 @@ public:
   msg_t()
   {
     int rc = zmq_msg_init(&msg);
-    zmq_proto_assert (rc == 0);
+    zmq_proto_assert(rc == 0);
   }
 
   const zmq_msg_t* zmq_handle() const
@@ -179,18 +179,23 @@ public:
 
 // helpers:
 
-template<typename Message>
-std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
-check_proto_type(msg_t& msg)
+inline int check_proto_type(msg_t& msg, const std::string& proto_type_name)
 {
-  std::string type_name = Message{}.GetTypeName();
-  if (strncmp(msg.data(), type_name.data(), type_name.size()) == 0)
+  if (strncmp(msg.data(), proto_type_name.data(), proto_type_name.size()) == 0)
     return 0;
   else
   {
     errno = EBADMSG;
     return -1;
   }
+}
+
+template<typename Message>
+std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
+check_proto_type(msg_t& msg)
+{
+  std::string type_name = Message{}.GetTypeName(); // Beware of unnecessary instantiation: https://github.com/protocolbuffers/protobuf/issues/2573
+  return check_proto_type(msg, type_name);
 }
 
 template<typename Message>
@@ -214,9 +219,8 @@ enum send_recv_flags { NONE = 0, DONTWAIT = ZMQ_DONTWAIT, SNDMORE = ZMQ_SNDMORE 
   sends two-part message. first is type name, second is proto
   errno: EAGAIN if the outbound message queue was full
 */
-template<socket_type_t socket_type, typename Message>
-std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
-send(const Message& payload, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
+template<socket_type_t socket_type>
+int send(const ::google::protobuf::MessageLite& payload, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
 {
   int rc;
 
@@ -326,9 +330,8 @@ int recv_more(const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
   errno: EOPNOTSUPP if there were no more message parts to receive
   errno: EPROTO if the proto could not be parsed
 */
-template<socket_type_t socket_type, typename Message>
-std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
-recv_more(Message& proto_msg, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
+template<socket_type_t socket_type>
+int recv_more(::google::protobuf::MessageLite& proto_msg, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
 {
   msg_t msg;
 
@@ -354,15 +357,14 @@ recv_more(Message& proto_msg, const socket_t<socket_type>& socket, send_recv_fla
   errno: EOPNOTSUPP if there were no more message parts to receive after first part
   errno: EPROTO if the proto could not be parsed / did not match
 */
-template<socket_type_t socket_type, typename Message>
-std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
-recv(Message& proto_msg, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
+template<socket_type_t socket_type>
+int recv(::google::protobuf::MessageLite& proto_msg, const socket_t<socket_type>& socket, send_recv_flags flags = NONE)
 {
   msg_t type_name_msg;
 
   int rc;
   (0 == (rc = recv(type_name_msg, socket, flags)))
-    && (0 == (rc = check_proto_type<Message>(type_name_msg)))
+    && (0 == (rc = check_proto_type(type_name_msg, proto_msg.GetTypeName())))
     && (0 == (rc = recv_more(proto_msg, socket, flags)));
 
   return rc;

@@ -63,7 +63,7 @@ int main()
 
       iterate<c.size()>
       ([](auto index){
-        printf("itaration %d: %s\n", index(), typeid(index).name());
+        printf("iteration %d: %s\n", index(), typeid(index).name());
       });
     }
   }
