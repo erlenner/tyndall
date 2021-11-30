@@ -15,8 +15,8 @@ template<typename STORAGE>
 using ipc_rtid_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ>;
 
 // Return and errno values are the same as for ipc_write / read
-#define ipc_rtid_write(entry, id) create_ipc_rtid_lazy<ipc_rtid_writer, typeinfo_remove_cvref_t<decltype(entry)>>(id).write(entry)
-#define ipc_rtid_read(entry, id) create_ipc_rtid_lazy<ipc_rtid_reader, typeinfo_remove_cvref_t<decltype(entry)>>(id).read(entry)
+#define ipc_rtid_write(entry, id) create_ipc_rtid_lazy<ipc_rtid_writer, std::remove_cvref_t<decltype(entry)>>(id).write(entry)
+#define ipc_rtid_read(entry, id) create_ipc_rtid_lazy<ipc_rtid_reader, std::remove_cvref_t<decltype(entry)>>(id).read(entry)
 
 template<typename STORAGE>
 inline ipc_rtid_writer<STORAGE> create_ipc_rtid_writer(const char* id)

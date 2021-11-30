@@ -191,16 +191,16 @@ inline int check_proto_type(msg_t& msg, const std::string& proto_type_name)
 }
 
 template<typename Message>
-std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, int>
-check_proto_type(msg_t& msg)
+requires(std::is_base_of<::google::protobuf::Message, Message>::value)
+int check_proto_type(msg_t& msg)
 {
   std::string type_name = Message{}.GetTypeName(); // Beware of unnecessary instantiation: https://github.com/protocolbuffers/protobuf/issues/2573
   return check_proto_type(msg, type_name);
 }
 
 template<typename Message>
-std::enable_if_t<std::is_base_of<::google::protobuf::Message, Message>::value, const char*>
-get_debug_string(const Message& proto)
+requires(std::is_base_of<::google::protobuf::Message, Message>::value)
+const char* get_debug_string(const Message& proto)
 {
   static std::string debug_string;
   debug_string = proto.GetTypeName() + " { " + proto.ShortDebugString() + " }";

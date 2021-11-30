@@ -10,8 +10,8 @@ int binlog_create(const char* path)
 }
 
 template<typename ProtoMessage>
-std::enable_if_t<std::is_base_of<::google::protobuf::Message, ProtoMessage>::value, int>
-binlog_write(int fd, const ProtoMessage& proto)
+requires(std::is_base_of<::google::protobuf::Message, ProtoMessage>::value)
+int binlog_write(int fd, const ProtoMessage& proto)
 {
   if (fd == -1)
   {
@@ -36,8 +36,8 @@ int binlog_open(const char* path)
 }
 
 template<typename ProtoMessage>
-std::enable_if_t<std::is_base_of<::google::protobuf::Message, ProtoMessage>::value, int>
-binlog_read(int fd, ProtoMessage& proto)
+requires(std::is_base_of<::google::protobuf::Message, ProtoMessage>::value)
+int binlog_read(int fd, ProtoMessage& proto)
 {
   if (fd == -1)
   {

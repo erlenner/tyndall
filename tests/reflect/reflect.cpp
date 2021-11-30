@@ -41,7 +41,6 @@ int main()
     {
       float floating_point;
       int integer;
-      //std::string std_string;
       int another_integer;
       unsigned int unsigned_integer;
       unsigned char unsigned_char;

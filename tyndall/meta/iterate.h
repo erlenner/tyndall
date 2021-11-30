@@ -7,8 +7,8 @@
 */
 
 template<int index, typename UnaryFunction>
-constexpr std::enable_if_t<index >= 1, void>
-iterate(UnaryFunction f) noexcept
+requires(index >= 1)
+constexpr void iterate(UnaryFunction f) noexcept
 {
   constexpr int prev_index = index - 1;
 
@@ -18,7 +18,7 @@ iterate(UnaryFunction f) noexcept
 }
 
 template<int index, typename UnaryFunction>
-constexpr std::enable_if_t<index == 0, void>
-iterate(UnaryFunction f) noexcept
+requires(index == 0)
+constexpr void iterate(UnaryFunction f) noexcept
 {
 }

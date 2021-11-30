@@ -41,25 +41,18 @@ namespace n_fields_detail
     }
   };
 
-  template<typename T, size_t... I, typename = typename std::enable_if_t<std::is_copy_constructible_v<T>>>
+  template<typename T, size_t... I>
+  requires(std::is_copy_constructible_v<T>)
   constexpr auto constructible(index_sequence<I...>) noexcept
     -> typename std::add_pointer_t<decltype(T{ ubiq_lref_constructor{I}... })>;
 
-  template<typename T, size_t... I, typename = typename std::enable_if_t<!std::is_copy_constructible_v<T>>>
+  template<typename T, size_t... I>
+  requires(!std::is_copy_constructible_v<T>)
   constexpr auto constructible(index_sequence<I...>) noexcept
     -> typename std::add_pointer_t<decltype(T{ ubiq_rref_constructor{I}... })>;
 
   template <class T, size_t N, typename = decltype(constructible<T>(make_index_sequence<N>()))>
   using constructible_t = size_t;
-
-
-  // n_fields_impl is overloaded with long and int to avoid multiple definitions
-  //template<typename T, size_t N>
-  //constexpr auto n_fields_impl(long long) noexcept
-  //  -> typename std::enable_if_t<std::is_array_v<T>, size_t>
-  //{
-  //  return sizeof(T) / sizeof(typename std::remove_all_extents_t<T>);
-  //}
 
   template<typename T, size_t N>
   constexpr auto n_fields_linear(long) noexcept -> constructible_t<T, N>
@@ -91,7 +84,7 @@ constexpr size_t n_fields() noexcept
 {
   constexpr size_t max_field_count = sizeof(T)*CHAR_BIT;
 
-  using type = typeinfo_remove_cvref_t<T>;
+  using type = std::remove_cvref_t<T>;
 
   static_assert(std::is_aggregate<type>::value || std::is_scalar<type>::value, "T must be aggregate initializable");
 
