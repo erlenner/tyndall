@@ -67,8 +67,13 @@ struct seq_lock
   static_assert(std::is_nothrow_copy_assignable_v<STORAGE>);
   static_assert(std::is_trivially_copy_assignable_v<STORAGE>);
 
-  unsigned seq;
-  STORAGE entry;
+  alignas(CACHELINE_BYTES) unsigned seq;
+
+  char padding0[CACHELINE_BYTES - (sizeof(seq) % CACHELINE_BYTES)];
+
+  volatile STORAGE entry;
+
+  char padding1[CACHELINE_BYTES - (sizeof(entry) % CACHELINE_BYTES)];
 
 public:
 
@@ -79,7 +84,9 @@ public:
   {
     unsigned seq = seq_lock_write_begin(&this->seq);
 
-    this->entry = entry;
+    //this->entry = entry;
+    //memcpy((void*)&this->entry, &entry, sizeof(entry));
+    smp_memcpy_to_vol(&this->entry, &entry, sizeof(entry));
 
     seq_lock_write_end(&this->seq, seq);
   }
@@ -92,7 +99,9 @@ public:
     do
     {
       seq1 = seq_lock_read_begin(&this->seq);
-      entry = this->entry;
+      //entry = this->entry;
+      //memcpy(&entry, (void*)&this->entry, sizeof(entry));
+      smp_memcpy_from_vol(&entry, &this->entry, sizeof(entry));
 
     } while (seq_lock_read_retry(&this->seq, seq1));
 

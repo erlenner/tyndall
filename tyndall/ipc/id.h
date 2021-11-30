@@ -30,11 +30,13 @@ using id_replace_slashes_with_underscores = decltype(STRING::template replace<'/
 
 template<typename ID>
 using id_prepare =
-  decltype(create_strval(IPC_SHMEM_PREFIX)
-  + "_"_strval
-  + id_hash<id_remove_leading_slashes<ID>>{} // hash id to prevent name clash between f.ex. /my/topic and my_topic
-  + "_"_strval
-  + id_replace_slashes_with_underscores<id_remove_leading_slashes<ID>>{}); // switch slashes with underscores
+  decltype(
+    create_strval(IPC_SHMEM_PREFIX)
+    + "_"_strval
+    + id_replace_slashes_with_underscores<id_remove_leading_slashes<ID>>{} // switch slashes with underscores
+    + "_"_strval
+    + id_hash<id_remove_leading_slashes<ID>>{} // hash id to prevent name clash between f.ex. /my/topic and my_topic
+  );
 
 
 // runtime id generation
@@ -45,7 +47,7 @@ inline std::string id_rtid_prepare(const char* id)
   while (*id == '/')
     ++id;
 
-  std::string prepared_id = IPC_SHMEM_PREFIX "_" + std::to_string(hash_fnv1a_32(id, strlen(id))) + "_" + std::string{id};
+  std::string prepared_id = IPC_SHMEM_PREFIX "_" + std::string{id} + "_" + std::to_string(hash_fnv1a_32(id, strlen(id)));
 
   // replace slash with underscore
   for (char& c : prepared_id)

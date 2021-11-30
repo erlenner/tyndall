@@ -8,7 +8,7 @@ set(C_CXX_EXTRA_FLAGS "-O2 -Wall -Wconversion -Wextra -Wno-unused-parameter -Wno
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${C_CXX_EXTRA_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_CXX_EXTRA_FLAGS}")
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE OFF)
 
 add_definitions(-DDEBUG)
 

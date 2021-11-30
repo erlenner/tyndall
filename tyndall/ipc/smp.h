@@ -7,6 +7,8 @@
 #include <stdatomic.h>
 #endif
 
+#include <stdint.h>
+
 // Symmetric multiprocessing helpers, using a mix of inline asm from the Linux kernel, and C11 atomics
 
 #define barrier() __asm__ __volatile__("": : :"memory")
@@ -87,3 +89,19 @@ int smp_cmp_xch(std::atomic<T>& x, T expected, T desired)
 #else
 #define smp_cmp_xch(x, expected, desired) ({ static_assert(false, "no smp_cmp_xch for c implemented\n"); 0; }) // TODO
 #endif
+
+inline volatile void* smp_memcpy_to_vol(volatile void* dst, const void* src, const size_t size)
+{
+  //memcpy((void*)dst, (const void*)src, size);
+  for (size_t i = 0; i < size; ++i)
+    ((volatile uint8_t*)dst)[i] = ((const uint8_t*)src)[i];
+  return dst;
+}
+
+inline void* smp_memcpy_from_vol(void* dst, const volatile void* src, const size_t size)
+{
+  //memcpy((void*)dst, (const void*)src, size);
+  for (size_t i = 0; i < size; ++i)
+    ((uint8_t*)dst)[i] = ((const volatile uint8_t*)src)[i];
+  return dst;
+}
