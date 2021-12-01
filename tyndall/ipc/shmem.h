@@ -88,7 +88,6 @@ enum shmem_permission
 };
 
 
-#if __cplusplus > 201703L
 #include <concepts>
 template<typename DATA_STRUCTURE>
 concept shmem_data_structure
@@ -97,12 +96,9 @@ concept shmem_data_structure
   { ds.write(storage, state) } -> std::same_as<void>; // void return type since we don't expect fail on send
   { ds.read(storage, state) } -> std::same_as<int>; // return value: 0 is success, -1 is error, errno is ENOMSG, EAGAIN
 };
-#endif
 
 template<typename DATA_STRUCTURE, int PERMISSIONS, typename ID = strval_t("")>
-#if __cplusplus > 201703L
 requires shmem_data_structure<DATA_STRUCTURE>
-#endif
 class shmem_data
 {
   void *buf;

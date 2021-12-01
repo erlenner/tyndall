@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8.3)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(C_CXX_EXTRA_FLAGS "-O2 -Wall -Wconversion -Wextra -Wno-unused-parameter -Wno-missing-field-initializers")
+set(C_CXX_EXTRA_FLAGS "-O2 -Wall -Wconversion -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -fconcepts-diagnostics-depth=4")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${C_CXX_EXTRA_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_CXX_EXTRA_FLAGS}")
 

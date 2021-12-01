@@ -12,11 +12,11 @@ class typevals
 template<typename Type, typename... Tail>
 struct typevals<Type, Tail...> : public typevals<Tail...>
 {
-  Type data;
+  Type val;
 
-  explicit constexpr typevals(typevals<Tail...> tl, Type data) noexcept
+  explicit constexpr typevals(typevals<Tail...> tl, Type val) noexcept
   : typevals<Tail...>(tl)
-  , data(data)
+  , val(val)
   {}
 
   template<typename Entry>
@@ -30,7 +30,7 @@ struct typevals<Type, Tail...> : public typevals<Tail...>
   requires(index == sizeof...(Tail))
   constexpr const Type& get() const noexcept
   {
-    return data;
+    return val;
   }
 
   template<int index>
