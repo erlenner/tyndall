@@ -19,9 +19,9 @@
 #define ipc_read(entry, id) ipc_lazy_read(entry, id ## _strval)
 
 template<typename STORAGE, typename ID>
-using ipc_writer = shmem_data<seq_lock<STORAGE>, SHMEM_WRITE, id_prepare<ID>>;
+using ipc_writer = shmem_buf<seq_lock<STORAGE>, SHMEM_WRITE, id_prepare<ID>>;
 template<typename STORAGE, typename ID>
-using ipc_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ, id_prepare<ID>>;
+using ipc_reader = shmem_buf<seq_lock<STORAGE>, SHMEM_READ, id_prepare<ID>>;
 
 #define create_ipc_writer(storage_type, id) (ipc_writer<storage_type, decltype(id ## _strval)>{})
 #define create_ipc_reader(storage_type, id) (ipc_reader<storage_type, decltype(id ## _strval)>{})

@@ -10,9 +10,9 @@
 // The normal, non-runtime implementation is preferred since it is cleaner.
 
 template<typename STORAGE>
-using ipc_rtid_writer = shmem_data<seq_lock<STORAGE>, SHMEM_WRITE>;
+using ipc_rtid_writer = shmem_buf<seq_lock<STORAGE>, SHMEM_WRITE>;
 template<typename STORAGE>
-using ipc_rtid_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ>;
+using ipc_rtid_reader = shmem_buf<seq_lock<STORAGE>, SHMEM_READ>;
 
 // Return and errno values are the same as for ipc_write / read
 #define ipc_rtid_write(entry, id) create_ipc_rtid_lazy<ipc_rtid_writer, std::remove_cvref_t<decltype(entry)>>(id).write(entry)

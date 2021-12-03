@@ -99,7 +99,7 @@ concept shmem_data_structure
 
 template<typename DATA_STRUCTURE, int PERMISSIONS, typename ID = strval_t("")>
 requires shmem_data_structure<DATA_STRUCTURE>
-class shmem_data
+class shmem_buf
 {
   void *buf;
   typename DATA_STRUCTURE::state state;
@@ -107,7 +107,7 @@ class shmem_data
 
 public:
 
-  shmem_data() noexcept
+  shmem_buf() noexcept
   : buf(NULL)
   {
     static_assert(ID::occurrences('/') == 0, "Id can't have slashes");
@@ -116,7 +116,7 @@ public:
       init(ID::c_str());
   }
 
-  shmem_data(const char* id) noexcept
+  shmem_buf(const char* id) noexcept
   {
     static_assert(ID::length() == 0, "Static id should be empty when specifying runtime id");
 
@@ -170,7 +170,7 @@ public:
       shmem_unmap(buf, sizeof(DATA_STRUCTURE));
   }
 
-  ~shmem_data() noexcept
+  ~shmem_buf() noexcept
   {
     uninit();
   }
@@ -188,10 +188,10 @@ public:
   }
 
   // disable copy
-  shmem_data(shmem_data& other) noexcept = delete;
+  shmem_buf(shmem_buf& other) noexcept = delete;
 
   // enable move
-  shmem_data& operator=(shmem_data&& other) noexcept
+  shmem_buf& operator=(shmem_buf&& other) noexcept
   {
     uninit();
 
@@ -202,7 +202,7 @@ public:
     return *this;
   }
 
-  shmem_data(shmem_data&& other)
+  shmem_buf(shmem_buf&& other)
     : buf(other.buf)
     , state(other.state)
   {
