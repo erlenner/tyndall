@@ -19,14 +19,14 @@ using ipc_rtid_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ>;
 #define ipc_rtid_read(entry, id) create_ipc_rtid_lazy<ipc_rtid_reader, std::remove_cvref_t<decltype(entry)>>(id).read(entry)
 
 template<typename STORAGE>
-inline ipc_rtid_writer<STORAGE> create_ipc_rtid_writer(const char* id)
+static inline ipc_rtid_writer<STORAGE> create_ipc_rtid_writer(const char* id)
 {
   std::string prepared_id = id_rtid_prepare<STORAGE>(id);
   return ipc_rtid_writer<STORAGE>{prepared_id.c_str()};
 }
 
 template<typename STORAGE>
-inline ipc_rtid_reader<STORAGE> create_ipc_rtid_reader(const char* id)
+static inline ipc_rtid_reader<STORAGE> create_ipc_rtid_reader(const char* id)
 {
   std::string prepared_id = id_rtid_prepare<STORAGE>(id);
   return ipc_rtid_reader<STORAGE>{prepared_id.c_str()};
@@ -35,7 +35,7 @@ inline ipc_rtid_reader<STORAGE> create_ipc_rtid_reader(const char* id)
 // To keep track of lazily created ipc objects, the runtime id needs to be looked up in a registry.
 // You might want to keep track of it manually instead.
 template<template<typename>typename TRANSPORT, typename STORAGE>
-inline TRANSPORT<STORAGE>& create_ipc_rtid_lazy(const char* id)
+static inline TRANSPORT<STORAGE>& create_ipc_rtid_lazy(const char* id)
 {
   std::string prepared_id = id_rtid_prepare<STORAGE>(id);
 

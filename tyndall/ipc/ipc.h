@@ -27,7 +27,7 @@ using ipc_reader = shmem_data<seq_lock<STORAGE>, SHMEM_READ, id_prepare<ID>>;
 #define create_ipc_reader(storage_type, id) (ipc_reader<storage_type, decltype(id ## _strval)>{})
 
 template<typename STORAGE, typename ID>
-inline void ipc_lazy_write(const STORAGE& entry, ID)
+static inline void ipc_lazy_write(const STORAGE& entry, ID)
 {
   static ipc_writer<STORAGE, ID> writer;
 
@@ -35,7 +35,7 @@ inline void ipc_lazy_write(const STORAGE& entry, ID)
 }
 
 template<typename STORAGE, typename ID>
-inline int ipc_lazy_read(STORAGE& entry, ID)
+static inline int ipc_lazy_read(STORAGE& entry, ID)
 {
   static ipc_reader<STORAGE, ID> reader;
 
@@ -44,7 +44,7 @@ inline int ipc_lazy_read(STORAGE& entry, ID)
 
 #endif
 
-inline int ipc_cleanup()
+static inline int ipc_cleanup()
 {
   return shmem_unlink_all(IPC_SHMEM_PREFIX);
 }

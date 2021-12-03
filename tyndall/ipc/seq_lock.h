@@ -16,7 +16,7 @@ https://github.com/rigtorp/Seqlock
 #include <errno.h>
 #include "smp.h"
 
-__attribute__((always_inline)) inline unsigned seq_lock_write_begin(unsigned* seq)
+__attribute__((always_inline)) static inline unsigned seq_lock_write_begin(unsigned* seq)
 {
   unsigned seq1 = *seq;
 
@@ -26,13 +26,13 @@ __attribute__((always_inline)) inline unsigned seq_lock_write_begin(unsigned* se
   return seq1;
 }
 
-__attribute__((always_inline)) inline void seq_lock_write_end(unsigned* seq, unsigned seq1)
+__attribute__((always_inline)) static inline void seq_lock_write_end(unsigned* seq, unsigned seq1)
 {
   smp_wmb();
   smp_write_once(*seq, ++seq1);
 }
 
-__attribute__((always_inline)) inline unsigned seq_lock_read_begin(unsigned* seq)
+__attribute__((always_inline)) static inline unsigned seq_lock_read_begin(unsigned* seq)
 {
   unsigned seq1;
   while((seq1 = smp_read_once(*seq)) & 1)
@@ -43,7 +43,7 @@ __attribute__((always_inline)) inline unsigned seq_lock_read_begin(unsigned* seq
   return seq1;
 }
 
-__attribute__((always_inline)) inline unsigned seq_lock_read_retry(unsigned* seq, unsigned seq1)
+__attribute__((always_inline)) static inline unsigned seq_lock_read_retry(unsigned* seq, unsigned seq1)
 {
   smp_rmb();
   unsigned seq2 = smp_read_once(*seq);

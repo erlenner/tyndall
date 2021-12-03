@@ -179,7 +179,7 @@ public:
 
 // helpers:
 
-inline int check_proto_type(msg_t& msg, const std::string& proto_type_name)
+static inline int check_proto_type(msg_t& msg, const std::string& proto_type_name)
 {
   if (strncmp(msg.data(), proto_type_name.data(), proto_type_name.size()) == 0)
     return 0;

@@ -197,7 +197,7 @@ size_t print_format(const char* data)
   return sizeof(Fmt) + align;
 }
 
-inline size_t print_format(char c, const char* data)
+static inline size_t print_format(char c, const char* data)
 {
   switch(c)
   {

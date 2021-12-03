@@ -40,7 +40,7 @@ using id_prepare =
 
 // runtime id generation
 template<typename STORAGE>
-inline std::string id_rtid_prepare(const char* id)
+static inline std::string id_rtid_prepare(const char* id)
 {
   // remove leading slashes
   while (*id == '/')
