@@ -144,7 +144,7 @@ Pub / sub example:
 
 ### Reader
 
-```
+```cpp
 #include <tyndall/ros_context.h>
 #include <std_msgs/Int32.h>
 
@@ -158,7 +158,7 @@ ros_context_write(msg, "/ex_ros_context");
 
 ### Writer
 
-```
+```cpp
 #include <tyndall/ros_context.h>
 #include <std_msgs/Int32.h>
 
@@ -172,14 +172,50 @@ while(1)
 
   if (rc == 0)
     printf("read: %d\n", msg.data);
-  else
-    std::this_thread::sleep_for(std::chrono::milliseconds{3});
 }
 ```
 
 Serve / call example:
 
+### Server
+
+```cpp
+#include <tyndall/ros_context.h>
+#include <std_srvs/SetBool.h>
+
+ros_context::init(argc, argv, std::chrono::milliseconds{3}, "ex_ros_context_serve");
+while(1)
+{
+  std_srvs::SetBool srv;
+  srv.response.success = true;
+
+  int rc = ros_context_serve(srv, "ex_ros_context");
+
+  if (rc == 0)
+    printf("got: %d\n", srv.request.data);
+}
 ```
+
+### Caller
+
+```cpp
+#include <tyndall/ros_context.h>
+#include <std_srvs/SetBool.h>
+
+ros_context::init(argc, argv, std::chrono::milliseconds{3}, "ex_ros_context_serve");
+while(1)
+{
+  std_srvs::SetBool srv;
+  srv.response.success = true;
+
+  std_srvs::SetBool srv;
+  srv.request.data = true;
+
+  int rc = ros_context_call(srv, "/ex_ros_context_serve/ex_ros_context");
+
+  if (rc == 0)
+    printf("got: %d\n", srv.response.success);
+}
 ```
 
 ## ipc
