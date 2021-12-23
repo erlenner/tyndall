@@ -39,12 +39,6 @@ void print(char* fmt, const char* buf, size_t buf_size)
           printed = strlen(b);
           b += printed;
           break;
-        case 'S':
-          // assumes sso optimized std::string
-          printf("%ss, ", reinterpret_cast<const std::string*>(b)->c_str());
-          printed = sizeof(std::string);
-          b += printed;
-          break;
         default:
           printf("error, wrong parameter: %c\n", *f);
       }

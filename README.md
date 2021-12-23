@@ -274,7 +274,6 @@ tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_my_topic_89117
 The format is a list of type ids according to:
 ```cpp
 s = string (null terminated)
-S = std::string (assumed to be in SSO state)
 b = bool
 f = float
 d = double
