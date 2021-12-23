@@ -74,6 +74,7 @@ static inline int shmem_unlink_all(const char *prefix)
 #include <assert.h>
 #include <typeindex>
 #include <type_traits>
+#include <concepts>
 #include <tyndall/meta/strval.h>
 #include <tyndall/meta/macro.h>
 #include <tyndall/meta/typeinfo.h>
@@ -88,17 +89,19 @@ enum shmem_permission
 };
 
 
-#include <concepts>
 template<typename DATA_STRUCTURE>
 concept shmem_data_structure
 = requires(DATA_STRUCTURE ds, typename DATA_STRUCTURE::storage storage, typename DATA_STRUCTURE::state state)
 {
   { ds.write(storage, state) } -> std::same_as<void>; // void return type since we don't expect fail on send
   { ds.read(storage, state) } -> std::same_as<int>; // return value: 0 is success, -1 is error, errno is ENOMSG, EAGAIN
+
+  { typename DATA_STRUCTURE::state{} };
 };
 
 template<typename DATA_STRUCTURE, int PERMISSIONS, typename ID = strval_t("")>
 requires shmem_data_structure<DATA_STRUCTURE>
+&& (ID::is_strval())
 class shmem_buf
 {
   void *buf;

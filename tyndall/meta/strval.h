@@ -72,6 +72,8 @@ struct strval<Lhs, Rhs...>
   }
 
   char data[length()] = { Lhs, Rhs... }; // actual storage
+
+  constexpr static inline bool is_strval(){ return true; }
 };
 
 template<>
@@ -115,6 +117,8 @@ struct strval<>
   void set() volatile
   {
   }
+
+  constexpr static inline bool is_strval(){ return true; }
 };
 
 template<char... Lhs, char... Rhs>
