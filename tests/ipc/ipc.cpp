@@ -8,14 +8,7 @@ struct my_struct
   double b;
   char c;
   unsigned long d;
-  //bool operator==(my_struct) = default; // c++20
-  bool operator==(my_struct rhs)
-  {
-    return (rhs.a == a)
-      && (rhs.b == b)
-      && (rhs.c == c)
-      && (rhs.d == d);
-  }
+  bool operator==(const my_struct&) const = default; // c++20
 };
 
 const my_struct ref
