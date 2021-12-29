@@ -6,7 +6,9 @@
 #include <cstdio>
 #include "tyndall/meta/typeinfo.h"
 
-// based on https://github.com/apolukhin/pfr_non_boost/blob/91f801bb08cf817c640d9c6d57ddfad5f38de92d/include/pfr/detail/fields_count.hpp
+// n_field counts the number of fields in a aggregate structure by trying to construct it.
+
+// Based on https://github.com/apolukhin/pfr_non_boost/blob/91f801bb08cf817c640d9c6d57ddfad5f38de92d/include/pfr/detail/fields_count.hpp
 // , with license: https://github.com/apolukhin/pfr_non_boost/blob/91f801bb08cf817c640d9c6d57ddfad5f38de92d/LICENSE_1_0.txt
 
 namespace n_fields_detail

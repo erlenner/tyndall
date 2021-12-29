@@ -2,6 +2,7 @@
 #include <tyndall/ipc/ipc.h>
 #include <tyndall/meta/macro.h>
 #include <thread>
+#include <chrono>
 #include <stdlib.h>
 
 struct my_struct
@@ -37,10 +38,10 @@ int main()
 {
   ipc_cleanup();
 
-  const int n_threads = 1;
+  const int n_threads = 4;
   std::thread threads[n_threads];
 
-  const int n_ids = 1 * n_threads;
+  const int n_ids = 10 * n_threads;
   const int id_length = 15;
   char ids[n_ids][id_length + 1];
 
@@ -56,7 +57,7 @@ int main()
     //printf("id %d: %s\n", i, &ids[i][0]);
   }
 
-  const int max_ids_per_thread = (n_ids / n_threads) * 1;
+  const int max_ids_per_thread = n_ids / 2 ?: 1;
   static_assert(max_ids_per_thread <= n_ids);
   //printf("max_ids_per_thread: %d\n", max_ids_per_thread);
   // array to divide the ids between threads
@@ -69,7 +70,7 @@ int main()
   for (int i=0; i < n_threads; ++i)
   {
     // give ids to the thread
-    const int thread_ids = 1 + rand() % (max_ids_per_thread - 1);
+    const int thread_ids = 1 + rand() % max_ids_per_thread;
     for (int j=0; j < thread_ids; ++j)
     {
       ids_per_thread[i][j] = rand() % n_ids;
@@ -119,27 +120,35 @@ int main()
         {
           // write
           for (int j=0; j < n_writers; ++j)
-            writers[j].write(++write_entry);
+          {
+            ++write_entry;
+            //printf("thread %d: writing %ld %f %d %lu\n", thread_index, write_entry.a, write_entry.b, write_entry.c, write_entry.d);
+            writers[j].write(write_entry);
+          }
 
           // read
           for (int j=0; j < n_readers; ++j)
           {
             my_struct read_entry;
-            printf("thread %d: %d start\n", thread_index, i);
             int rc = readers[j].read(read_entry);
-            printf("thread %d: %d end\n", thread_index, i);
 
             if (rc == 0)
             {
               //printf("thread %d: checking %ld\n", read_entry.a);
-              printf("thread %d: checking %ld %f %d %lu\n", thread_index, read_entry.a, read_entry.b, read_entry.c, read_entry.d);
+              //printf("thread %d: reading %ld %f %d %lu\n", thread_index, read_entry.a, read_entry.b, read_entry.c, read_entry.d);
 
-              check(read_entry.has_consistent_even_ness());
+              if (!read_entry.has_consistent_even_ness())
+              {
+                printf("thread %d: wrong evenness: %ld %f %d %lu\n", thread_index, read_entry.a, read_entry.b, read_entry.c, read_entry.d);
+                ipc_cleanup();
+                exit(1);
+              }
             }
           }
+          std::this_thread::sleep_for(std::chrono::milliseconds{1});
         }
 
-        printf("thread %d: done\n", thread_index);
+        //printf("thread %d: done\n", thread_index);
       }
     };
   }
