@@ -39,7 +39,6 @@ using id_prepare =
 
 
 // runtime id generation
-template<typename STORAGE>
 static inline std::string id_rtid_prepare(const char* id)
 {
   // remove leading slashes

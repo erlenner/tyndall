@@ -37,10 +37,10 @@ int main()
 {
   ipc_cleanup();
 
-  const int n_threads = 10;
+  const int n_threads = 1;
   std::thread threads[n_threads];
 
-  const int n_ids = 10 * n_threads;
+  const int n_ids = 1 * n_threads;
   const int id_length = 15;
   char ids[n_ids][id_length + 1];
 
@@ -56,8 +56,8 @@ int main()
     //printf("id %d: %s\n", i, &ids[i][0]);
   }
 
-  const int max_ids_per_thread = (n_ids / n_threads) * 5;
-  static_assert(max_ids_per_thread < n_ids);
+  const int max_ids_per_thread = (n_ids / n_threads) * 1;
+  static_assert(max_ids_per_thread <= n_ids);
   //printf("max_ids_per_thread: %d\n", max_ids_per_thread);
   // array to divide the ids between threads
   int ids_per_thread[n_threads][max_ids_per_thread];
@@ -105,32 +105,41 @@ int main()
         {
           const int id_index = ids_per_thread[thread_index][i];
           const char* id = &ids[id_index][0];
+          std::string prepared_id = id_rtid_prepare(id);
           if (writing_thread_for_id[id_index] == thread_index)
-            writers[n_writers++].init(id);
+            writers[n_writers++].init(prepared_id.c_str());
           else
-            readers[n_readers++].init(id);
+            readers[n_readers++].init(prepared_id.c_str());
         }
 
         my_struct write_entry = {0};
 
-        const int n_iterations = 100;
+        const int n_iterations = 1000;
         for (int i=0; i<n_iterations; ++i)
         {
           // write
-          for (int i=0; i < n_writers; ++i)
-            writers[i].write(++write_entry);
+          for (int j=0; j < n_writers; ++j)
+            writers[j].write(++write_entry);
 
           // read
-          for (int i=0; i < n_readers; ++i)
+          for (int j=0; j < n_readers; ++j)
           {
             my_struct read_entry;
-            readers[i].read(read_entry);
+            printf("thread %d: %d start\n", thread_index, i);
+            int rc = readers[j].read(read_entry);
+            printf("thread %d: %d end\n", thread_index, i);
 
-            printf("thread %d: checking %ld\n", read_entry.a);
+            if (rc == 0)
+            {
+              //printf("thread %d: checking %ld\n", read_entry.a);
+              printf("thread %d: checking %ld %f %d %lu\n", thread_index, read_entry.a, read_entry.b, read_entry.c, read_entry.d);
 
-            check(read_entry.has_consistent_even_ness());
+              check(read_entry.has_consistent_even_ness());
+            }
           }
         }
+
+        printf("thread %d: done\n", thread_index);
       }
     };
   }

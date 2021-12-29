@@ -21,14 +21,14 @@ using ipc_rtid_reader = shmem_buf<seq_lock<STORAGE>, SHMEM_READ>;
 template<typename STORAGE>
 static inline ipc_rtid_writer<STORAGE> create_ipc_rtid_writer(const char* id)
 {
-  std::string prepared_id = id_rtid_prepare<STORAGE>(id);
+  std::string prepared_id = id_rtid_prepare(id);
   return ipc_rtid_writer<STORAGE>{prepared_id.c_str()};
 }
 
 template<typename STORAGE>
 static inline ipc_rtid_reader<STORAGE> create_ipc_rtid_reader(const char* id)
 {
-  std::string prepared_id = id_rtid_prepare<STORAGE>(id);
+  std::string prepared_id = id_rtid_prepare(id);
   return ipc_rtid_reader<STORAGE>{prepared_id.c_str()};
 }
 
@@ -37,7 +37,7 @@ static inline ipc_rtid_reader<STORAGE> create_ipc_rtid_reader(const char* id)
 template<template<typename>typename TRANSPORT, typename STORAGE>
 static inline TRANSPORT<STORAGE>& create_ipc_rtid_lazy(const char* id)
 {
-  std::string prepared_id = id_rtid_prepare<STORAGE>(id);
+  std::string prepared_id = id_rtid_prepare(id);
 
   // manual registry is needed as substitution for compile time template matching
   struct registry_item
