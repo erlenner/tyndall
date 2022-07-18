@@ -1,7 +1,7 @@
-#include <tyndall/reflect/reflect.h>
 #include <string>
 #include <typeinfo>
 #include <array>
+#include "tyndall/reflect/reflect.h"
 
 int main()
 {

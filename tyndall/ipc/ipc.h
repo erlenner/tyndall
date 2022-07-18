@@ -3,7 +3,7 @@
 
 #ifdef __cplusplus
 
-#include <tyndall/meta/strval.h>
+#include "tyndall/meta/strval.h"
 #include "seq_lock.h"
 #include "id.h"
 #include "ipc_rtid.h"

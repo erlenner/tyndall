@@ -1,9 +1,10 @@
 #include <assert.h>
-#include <tyndall/ipc/ipc.h>
-#include <tyndall/meta/macro.h>
 #include <thread>
 #include <chrono>
 #include <stdlib.h>
+
+#include "tyndall/ipc/ipc.h"
+#include "tyndall/meta/macro.h"
 
 struct my_struct
 {
@@ -45,8 +46,8 @@ int main()
   const int id_length = 15;
   char ids[n_ids][id_length + 1];
 
-  const char id_char_begin = 97;
-  const char id_char_end = 123;
+  const char id_char_begin = 'a';
+  const char id_char_end = 'z' + 1;
   //printf("begin, end-1: %c %c\n", id_char_begin, id_char_end-1);
 
   for (int i=0; i < n_ids; ++i)
@@ -115,7 +116,7 @@ int main()
 
         my_struct write_entry = {0};
 
-        const int n_iterations = 1000;
+        const int n_iterations = 10000;
         for (int i=0; i<n_iterations; ++i)
         {
           // write
@@ -145,7 +146,7 @@ int main()
               }
             }
           }
-          std::this_thread::sleep_for(std::chrono::milliseconds{1});
+          //std::this_thread::sleep_for(std::chrono::milliseconds{1});
         }
 
         //printf("thread %d: done\n", thread_index);

@@ -75,11 +75,11 @@ static inline int shmem_unlink_all(const char *prefix)
 #include <typeindex>
 #include <type_traits>
 #include <concepts>
-#include <tyndall/meta/strval.h>
-#include <tyndall/meta/macro.h>
-#include <tyndall/meta/typeinfo.h>
-#include <tyndall/reflect/reflect.h>
-#include <tyndall/meta/strval.h>
+#include "tyndall/meta/strval.h"
+#include "tyndall/meta/macro.h"
+#include "tyndall/meta/typeinfo.h"
+#include "tyndall/reflect/reflect.h"
+#include "tyndall/meta/strval.h"
 #include "smp.h"
 
 enum shmem_permission

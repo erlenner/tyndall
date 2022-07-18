@@ -1,6 +1,6 @@
 #include <assert.h>
-#include <tyndall/ipc/ipc.h>
-#include <tyndall/meta/macro.h>
+#include "tyndall/ipc/ipc.h"
+#include "tyndall/meta/macro.h"
 
 struct my_struct
 {

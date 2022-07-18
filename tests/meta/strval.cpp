@@ -2,7 +2,7 @@
 #include <type_traits>
 #include <cstring>
 #include <cassert>
-#include <tyndall/meta/typeinfo.h>
+#include "tyndall/meta/typeinfo.h"
 
 
 int main()

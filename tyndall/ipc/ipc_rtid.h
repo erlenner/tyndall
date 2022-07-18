@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 
-#include <tyndall/meta/typeinfo.h>
+#include "tyndall/meta/typeinfo.h"
 #include "shmem.h"
 #include "seq_lock.h"
 #include "id.h"

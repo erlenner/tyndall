@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
-#include <tyndall/meta/strval.h>
-#include <tyndall/meta/hash.h>
+#include "tyndall/meta/strval.h"
+#include "tyndall/meta/hash.h"
 
 #ifndef IPC_SHMEM_PREFIX
 //                              echo ipc | sha1sum  # more unique shared memory names reduce the chance of name collisions
