@@ -62,6 +62,23 @@ int main()
     //printf("id %d: %s\n", i, &ids[i][0]);
   }
 
+  // check for duplicates
+  {
+    bool duplicate = false;
+    do
+    {
+      for (int i=0; i < n_ids; ++i)
+        for (int j=0; j < n_ids; ++j)
+          if ((i!=j) && (strcmp(&ids[i][0], &ids[j][0]) == 0))
+          {
+            duplicate = true;
+
+            for (int j=0; j < id_length; ++j)
+              ids[i][j] = id_char_begin + rand() % (id_char_end - id_char_begin);
+          }
+    } while (duplicate);
+  }
+
   const int max_ids_per_thread = n_ids / 2 ?: 1;
   static_assert(max_ids_per_thread <= n_ids);
   //printf("max_ids_per_thread: %d\n", max_ids_per_thread);
@@ -69,7 +86,9 @@ int main()
   int ids_per_thread[n_threads][max_ids_per_thread];
   std::fill(&ids_per_thread[0][0], &ids_per_thread[n_threads][max_ids_per_thread], -1);
 
-  int writing_thread_for_id[n_ids] = {0};
+  int writing_thread_for_id[n_ids];
+  std::fill(&writing_thread_for_id[0], &writing_thread_for_id[n_ids], -1);
+  
 
   static_assert(n_ids >= n_threads);
   for (int i=0; i < n_threads; ++i)
@@ -95,7 +114,7 @@ int main()
       } while (duplicate);
 
       // register thread as writer if there is no other writer of the id
-      if (writing_thread_for_id[ids_per_thread[i][j]] == 0)
+      if (writing_thread_for_id[ids_per_thread[i][j]] == -1)
         writing_thread_for_id[ids_per_thread[i][j]] = i;
     }
 
@@ -113,7 +132,10 @@ int main()
           const char* id = &ids[id_index][0];
           std::string prepared_id = id_rtid_prepare(id);
           if (writing_thread_for_id[id_index] == thread_index)
+          {
             writers[n_writers++].init(prepared_id.c_str());
+            //printf("%d writes to %s\n", thread_index, prepared_id.c_str());
+          }
           else
             readers[n_readers++].init(prepared_id.c_str());
         }
