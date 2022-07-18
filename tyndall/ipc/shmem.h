@@ -74,7 +74,6 @@ static inline int shmem_unlink_all(const char *prefix)
 #include <assert.h>
 #include <typeindex>
 #include <type_traits>
-#include <concepts>
 #include "tyndall/meta/strval.h"
 #include "tyndall/meta/macro.h"
 #include "tyndall/meta/typeinfo.h"
@@ -89,6 +88,8 @@ enum shmem_permission
 };
 
 
+#if __cplusplus >= 202002L
+#include <concepts>
 template<typename DATA_STRUCTURE>
 concept shmem_data_structure
 = requires(DATA_STRUCTURE ds, typename DATA_STRUCTURE::storage storage, typename DATA_STRUCTURE::state state)
@@ -98,10 +99,13 @@ concept shmem_data_structure
 
   { typename DATA_STRUCTURE::state{} };
 };
+#endif
 
 template<typename DATA_STRUCTURE, int PERMISSIONS, typename ID = strval_t("")>
+#if __cplusplus >= 202002L
 requires shmem_data_structure<DATA_STRUCTURE>
 && (ID::is_strval())
+#endif
 class shmem_buf
 {
   void *buf;

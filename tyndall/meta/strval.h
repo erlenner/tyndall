@@ -50,15 +50,15 @@ struct strval<Lhs, Rhs...>
   }
 
   template<int index>
-  requires(index == 0)
-  static constexpr char get() noexcept
+  static constexpr std::enable_if_t<index == 0,
+  char> get() noexcept
   {
     return Lhs;
   }
 
   template<int index>
-  requires(index > 0)
-  static constexpr char get() noexcept
+  static constexpr std::enable_if_t<0 < index,
+  char> get() noexcept
   {
     return strval<Rhs...>::template get<index - 1>();
   }

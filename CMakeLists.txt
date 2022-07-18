@@ -1,7 +1,7 @@
 project(tyndall)
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.11)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(C_CXX_EXTRA_FLAGS "-O2 -Wall -Wconversion -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -fconcepts-diagnostics-depth=4")

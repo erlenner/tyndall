@@ -25,7 +25,7 @@ int main()
     char buf[100];
     memset(buf, 0, sizeof(buf));
     void* buf_p = buf;
-    auto hei_p = static_cast<std::remove_cvref_t<decltype(hei)>*>(buf_p);
+    auto hei_p = static_cast<typeinfo_remove_cvref_t<decltype(hei)>*>(buf_p);
     *hei_p = {};
     assert(strcmp(buf, hei.c_str()) == 0);
   }

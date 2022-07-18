@@ -20,30 +20,27 @@ struct typevals<Type, Tail...> : public typevals<Tail...>
   {}
 
   template<typename Entry>
-  constexpr typevals<Entry, Type, Tail...>
-  operator+(Entry entry) const noexcept
+  constexpr typevals<Entry, Type, Tail...> operator+(Entry entry) const noexcept
   {
     return typevals<Entry, Type, Tail...>(*this, entry);
   }
 
   template<int index>
-  requires(index == sizeof...(Tail))
-  constexpr const Type& get() const noexcept
+  constexpr std::enable_if_t<index == sizeof...(Tail),
+  const Type&> get() const noexcept
   {
     return val;
   }
 
   template<int index>
-  requires(index < sizeof...(Tail))
-  constexpr decltype(typevals<Tail...>::template get_type<index>())
-  get() const noexcept
+  constexpr std::enable_if_t<index < sizeof...(Tail),
+  decltype(typevals<Tail...>::template get_type<index>())> get() const noexcept
   {
     return typevals<Tail...>::template get<index>();
   }
 
   template<int index>
-  constexpr decltype(typevals<Type, Tail...>::template get_type<index>())
-  operator[](std::integral_constant<int, index>) const noexcept
+  constexpr decltype(typevals<Type, Tail...>::template get_type<index>()) operator[](std::integral_constant<int, index>) const noexcept
   {
     return get<index>();
   }
@@ -57,17 +54,15 @@ protected:
 
   // get_type is a static helper for determining return type of get
   template<int index>
-  requires(index == sizeof...(Tail))
-  static constexpr const Type&
-  get_type() noexcept
+  static constexpr std::enable_if_t<index == sizeof...(Tail),
+  const Type&> get_type() noexcept
   {
     return Type();
   }
 
   template<int index>
-  requires(index < sizeof...(Tail))
-  static constexpr decltype(typevals<Tail...>::template get_type<index>())
-  get_type() noexcept
+  static constexpr std::enable_if_t<index < sizeof...(Tail),
+  decltype(typevals<Tail...>::template get_type<index>())> get_type() noexcept
   {
     return typevals<Tail...>::template get_type<index>();
   }

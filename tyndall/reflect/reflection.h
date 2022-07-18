@@ -36,7 +36,7 @@ struct reflection<Lhs, Rhs...> : public reflection<Rhs...>
 
   static constexpr auto get_format() noexcept
   {
-    constexpr auto lhs_format = ::print_format_typeid<std::remove_cvref_t<Lhs>>();
+    constexpr auto lhs_format = ::print_format_typeid<typeinfo_remove_cvref_t<Lhs>>();
 
     constexpr auto rhs_format = reflection<Rhs...>::get_format();
 
@@ -48,15 +48,13 @@ struct reflection<Lhs, Rhs...> : public reflection<Rhs...>
 
 protected:
 
-  template<size_t index>
-  requires(index == 0)
+  template<size_t index, typename = std::enable_if_t<index == 0>>
   static constexpr const Lhs& get_impl(const reflection<Lhs, Rhs...>& refl) noexcept
   {
     return refl.lhs;
   }
 
-  template<size_t index>
-  requires(index > 0)
+  template<size_t index, typename = std::enable_if_t<0 < index>>
   static constexpr const auto& get_impl(const reflection<Lhs, Rhs...>& refl) noexcept
   {
     return reflection<Rhs...>::template get_impl<index-1>(static_cast<const reflection<Rhs...>&>(refl));

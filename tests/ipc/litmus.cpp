@@ -12,7 +12,11 @@ struct my_struct
   double b;
   char c;
   unsigned long d;
-  bool operator==(const my_struct&) const = default;
+  //bool operator==(const my_struct&) const = default; // c++20
+  bool operator==(const my_struct& rhs)
+  {
+    return (rhs.a == a) && (rhs.b == b) && (rhs.c == c) && (rhs.d == d);
+  }
 
   my_struct& operator++()
   {
