@@ -14,12 +14,12 @@
 typedef struct
 {
   const char * const name;
+  char* args[10]; // increase as needed
   int respawn;  // respawn on error: -1 = infinite , 0 = never, 1 = once, 2 = twice, etc.
 
 // internal
   pid_t pid;
   int alive;
-  char* args[10]; // increase as needed
 
 } child;
 
@@ -30,11 +30,12 @@ child children[] =
 {
 //==================== FILL IN PROCESSES ====================
   {
-    .name = "/usr/bin/tyndall_ex_ipc_writer",
+    .name = "/usr/local/bin/tyndall_ex_ipc_writer",
+    .args = {},
     .respawn = -1,
   },
   {
-    .name = "/usr/bin/tyndall_ex_ipc_reader",
+    .name = "/usr/local/bin/tyndall_ex_ipc_reader",
     .args = { "--my_option", "--my_other_option", },
   },
 //===========================================================
@@ -60,6 +61,7 @@ int fork_child(child *c)
 
     setpgid(0, 0); // switch process group so ctrl-c only interrupts god
 
+    // fill in argv
     char * child_argv[len(c->args) + 2];
     child_argv[0] = (char*)(c->name);
     for (int i=0; i < len(c->args); ++i)

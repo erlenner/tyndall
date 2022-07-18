@@ -27,12 +27,12 @@
 #define debug_color_red "\033[31m"
 #define debug_color_reset   "\033[0m"
 #define debug_color_bold    "\033[1m"
-#define debug_error(fmt, ...) debug_f(debug_stderr, debug_color_red debug_color_bold "[errno: %s] " fmt debug_color_reset, strerror(errno) __VA_OPT__(,) __VA_ARGS__)
+#define debug_error(fmt, ...) debug_f(debug_stderr, debug_color_red debug_color_bold "[errno: %s] " fmt debug_color_reset, strerror(errno), ##__VA_ARGS__)
 #define debug_error_plain(...) fprintf(debug_stderr, __VA_ARGS__);
 
 
 
-#define debug_assert(cond, ...) do { if (!(cond)) { debug_error("assertion failed: (" debug_stringify(cond) ") errno: %s\n", strerror(errno)); __VA_ARGS__ __VA_OPT__(;break;) exit(1); } } while(0)
+#define debug_assert(cond, ...) do { if (!(cond)) { debug_error("assertion failed: (" debug_stringify(cond) ") errno: %s\n", strerror(errno)); __VA_ARGS__ ; exit(1); } } while(0)
 
 #define debug_assert_v(cond, ...) do { if (!(cond)) { debug_error(__VA_ARGS__); debug_error_plain("%s\n", strerror(errno)); /*exit(-1);*/ } } while(0)
 

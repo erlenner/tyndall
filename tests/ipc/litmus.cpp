@@ -43,7 +43,7 @@ int main()
 {
   ipc_cleanup();
 
-  const int n_threads = 4;
+  const int n_threads = 8;
   std::thread threads[n_threads];
 
   const int n_ids = 10 * n_threads;
@@ -142,7 +142,7 @@ int main()
 
         my_struct write_entry = {0};
 
-        const int n_iterations = 10000;
+        const int n_iterations = 100000;
         for (int i=0; i<n_iterations; ++i)
         {
           // write
