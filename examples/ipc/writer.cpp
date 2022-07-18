@@ -1,11 +1,11 @@
 #include <signal.h>
 
+#include "my_struct.h"
+
 #include <tyndall/ipc/ipc.h>
 #define debug_stdout stdout
 #define debug_stderr stderr
 #include <tyndall/debug.h>
-
-#include "my_struct.h"
 
 int run = 1;
 
