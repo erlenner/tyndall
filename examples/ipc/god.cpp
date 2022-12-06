@@ -30,12 +30,12 @@ child children[] =
 {
 //==================== FILL IN PROCESSES ====================
   {
-    .name = "/usr/local/bin/tyndall_ex_ipc_writer",
+    .name = "tyndall_ex_ipc_writer",
     .args = {},
     .respawn = -1,
   },
   {
-    .name = "/usr/local/bin/tyndall_ex_ipc_reader",
+    .name = "tyndall_ex_ipc_reader",
     .args = { "--my_option", "--my_other_option", },
   },
 //===========================================================
@@ -68,7 +68,7 @@ int fork_child(child *c)
       child_argv[i+1] = c->args[i];
     child_argv[len(c->args) + 1] = NULL;
 
-    int rc = execv(c->name, child_argv);
+    int rc = execvp(c->name, child_argv);
     debug_assert(rc != -1);
   }
 
