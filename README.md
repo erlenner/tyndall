@@ -298,3 +298,8 @@ You can ignore a specified amount of bytes in the struct by having a number in t
 ```shell
 tyndall_tool_ipc_read ipc1ef42bc4e0bbfeb0ac34bc3642732768cf6f77b7_my_topic_891174619 i8f
 ```
+
+You can use [fzf](https://github.com/junegunn/fzf) to choose and view topics:
+```shell
+ls /dev/shm/ipc* | fzf --preview 'tyndall_tool_ipc_read {1} | xargs -I{} echo $(clear) {}' --reverse
+```

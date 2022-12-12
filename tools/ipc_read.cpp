@@ -58,6 +58,7 @@ void print(char* fmt, const char* buf, size_t buf_size)
     }
   }
   printf("\n");
+  fflush(stdout);
 }
 
 int main(int argc, char** argv)
@@ -111,7 +112,6 @@ int main(int argc, char** argv)
   {
     bool new_buf = false;
     {
-
       unsigned seq1;
       do
       {
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
           for (size_t i=0; i<buf_size; ++i)
             printf("%02x", buf[i]);
           printf("\n");
-          //printf("int: %d\n", *(int*)buf);
+          fflush(stdout);
         }
       }
     }
