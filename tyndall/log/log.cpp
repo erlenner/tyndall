@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <cstdlib>
+#include <cassert>
 
 #include "log.h"
 
@@ -7,22 +8,14 @@ const char* log_level_to_string(log_level_t lvl)
 {
     switch(lvl)
     {
-        case log_level_t::fatal:
-            return "fatal";
-        case log_level_t::error:
-            return "error";
-        case log_level_t::alarm:
-            return "alarm";
-        case log_level_t::warning:
-            return "warning";
-        case log_level_t::info:
-            return "info";
-        case log_level_t::debug:
-            return "debug";
-        case log_level_t::trace:
-            return "trace";
-        default:
-            return "unknown";
+        case log_level_t::fatal:    return "fatal";
+        case log_level_t::error:    return "error";
+        case log_level_t::alarm:    return "alarm";
+        case log_level_t::warning:  return "warning";
+        case log_level_t::info:     return "info";
+        case log_level_t::debug:    return "debug";
+        case log_level_t::trace:    return "trace";
+        default: assert(0);
     }
 }
 
@@ -38,9 +31,7 @@ std::string log_level_to_color_string(log_level_t lvl)
         case log_level_t::info:     c = fmt::color::light_green; break;
         case log_level_t::debug:    c = fmt::color::cyan; break;
         case log_level_t::trace:    c = fmt::color::dark_cyan; break;
-
-        default:
-            c = fmt::color::white;
+        default: assert(0);
     }
     return fmt::format(fmt::emphasis::bold | fmt::fg(c), log_level_to_string(lvl));
 }
@@ -51,7 +42,7 @@ log_level_t log_level_from_string(const char* string)
 {
     log_level_t ret = log_level_t::invalid;
 
-    for (int i=0; i <= (int)log_level_t::n_levels; ++i)
+    for (int i=0; i < (int)log_level_t::n_levels; ++i)
         if ((strncmp(string, log_level_to_string((log_level_t)i), strlen(log_level_to_string((log_level_t)i))) == 0)
             || ((string[0] == '0' + i) && (strlen(string) == 1)))
             ret = (log_level_t)i;
@@ -71,11 +62,9 @@ bool log_glob_match(const char* pat, const char* str, long n)
   do
   {
       pat_end = strchr(pat_start, '*');
-      if (pat_end == NULL)
+      if ((pat_end == NULL) || (pat_end > pat + n))
           pat_end = pat + n;
-      else
-          pat_end = std::min(pat_end, pat + n);
-  
+
       // search for the text at str_index between pat_start and pat_end
       bool pat_matches = false;
       for (const char* s = str_index; !pat_matches && (*s != '\0'); ++s)
@@ -88,10 +77,10 @@ bool log_glob_match(const char* pat, const char* str, long n)
       }
       if (!pat_matches)
           ret = false;
-  
+
       str_index += pat_end - pat_start;
       pat_start = pat_end + 1;
-  
+
   } while (*pat_end == '*');
 
   return ret;
@@ -130,4 +119,15 @@ log_level_t log_level(const char* cat)
         ref_lvl = log_level_default;
 
     return ref_lvl;
+}
+
+void log_string(const std::string& s, log_level_t lvl, std::string cat, std::string file, int line)
+{
+    std::string colored_cat = fmt::format(fmt::fg(fmt::color::dark_violet), cat);
+
+    std::string preamble = fmt::format("[{}\t{}:{} {}]\t", log_level_to_color_string(lvl), file, line, colored_cat);
+
+    std::string result = preamble + s;
+
+    printf(result.c_str());
 }
